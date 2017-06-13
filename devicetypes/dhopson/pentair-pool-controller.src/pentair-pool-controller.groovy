@@ -70,14 +70,14 @@ metadata {
 	}
 
 	tiles(scale: 2) {
-        valueTile("timedate", "device.timedate", width: 5, height: 2) {
+        valueTile("timedate", "device.timedate", width: 5, height: 3) {
 			state "val", label:'${currentValue}', defaultState: true
 		}
         // Pumps
-        valueTile("Pump 1", "device.Pump 1", width: 3, height: 5) {
+        valueTile("Pump 1", "device.Pump 1", width: 3, height: 3) {
 			state "val", label:'${currentValue}', defaultState: true
 		}     
-        valueTile("Pump 2", "device.Pump 2", width: 3, height: 5) {
+        valueTile("Pump 2", "device.Pump 2", width: 3, height: 3) {
 			state "val", label:'${currentValue}', defaultState: true
 		}
         // Lights
@@ -98,7 +98,7 @@ metadata {
 			state "on", label: 'Pool ${currentValue}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#79b821", nextState: "off"
 		}
         // spa turns on heater
-        standardTile("spa", "device.spa", width: 4, height: 4, canChangeBackground: true) {
+        standardTile("spa", "device.spa", width: 3, height: 3, canChangeBackground: true) {
             //label: 'Spa ${currentValue}'
         	state "unknown", label: 'Spa', action: "spaUnknown", icon: "st.thermostat.heat", backgroundColor: "#F2F200"
 			state "off", label: '', action: "spaToggle", icon: "st.thermostat.heat", backgroundColor: "#ffffff", nextState: "on"
@@ -145,7 +145,7 @@ metadata {
                 [value: 96, color: "#bc2323"]
             ])
     	}     
-        valueTile("spaTemp", "device.spaTemp", width: 2, height: 2, canChangeBackground: true) {
+        valueTile("spaTemp", "device.spaTemp", width: 3, height: 3, canChangeBackground: true) {
         	state("temperature", label:'${currentValue}°',decoration: "flat", icon: "st.Bath.bath4",
             backgroundColors:[
                 [value: 31, color: "#153591"],
@@ -159,14 +159,14 @@ metadata {
     	}
         
         // spaMode not being used
-        standardTile("spaMode", "device.spaMode", width: 2, height: 2) {
+        standardTile("spaMode", "device.spaMode", width: 3, height: 3) {
             //state "temperature", label:'${currentValue}°', icon:"st.thermostat.heat" 
         	state "off", label:'', icon:"st.thermostat.heat", action: "heatToggle", backgroundColor: "#ffffff", nextState: "on",decoration: "flat"
             state "on", label:'', icon:"st.thermostat.heating", action: "heatToggle", backgroundColor: "#44b621",nextState: "off",decoration: "flat"
     	} 
         
         // Misc
-        standardTile("refresh2", "command.refresh2", width: 2, height: 2, inactiveLabel: false) {
+        standardTile("refresh2", "command.refresh2", width: 3, height: 3, inactiveLabel: false) {
         	state "default", label:'refresh', action:"refresh.refresh", icon:"st.secondary.refresh-icon"
     	}
         
@@ -188,6 +188,7 @@ metadata {
         */
        
         main(["waterTemp"])
+        /*
 		details(["timedate","refresh", "blank",
         		"airTemp", "waterTemp",
                 "poolLight", "spaLight", 
@@ -196,6 +197,15 @@ metadata {
                 "spillWay", "blower",
                 "Pump 1","Pump 2",
                 "refresh"])
+         */ 
+         		details(["timedate","refresh",
+        		"airTemp", "waterTemp",
+                "poolLight", "spaLight", 
+                "spa","spaTemp",
+                "pool", "cleaner", 
+                "spillWay", "blower",
+                "Pump 1","Pump 2",
+                "refresh2"])
 	}
 }
 
