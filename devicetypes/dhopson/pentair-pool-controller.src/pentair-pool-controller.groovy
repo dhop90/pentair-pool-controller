@@ -70,7 +70,7 @@ metadata {
 	}
 
 	tiles(scale: 2) {
-        valueTile("timedate", "device.timedate", width: 5, height: 3) {
+        valueTile("timedate", "device.timedate", width: 6, height: 3) {
 			state "val", label:'${currentValue}', defaultState: true
 		}
         // Pumps
@@ -166,13 +166,14 @@ metadata {
     	} 
         
         // Misc
-        standardTile("refresh2", "command.refresh2", width: 3, height: 3, inactiveLabel: false) {
+        standardTile("refresh", "command.refresh2", width: 3, height: 3, inactiveLabel: false) {
         	state "default", label:'refresh', action:"refresh.refresh", icon:"st.secondary.refresh-icon"
     	}
-        
+        /*
         standardTile("refresh", "command.refresh", width: 1, height: 1, inactiveLabel: false) {
         	state "default", label:'refresh', action:"refresh.refresh", icon:"st.secondary.refresh-icon"
     	}
+        */
         
         standardTile("blank", "command.blank", width: 1, height: 1, inactiveLabel: false) {
         	state "default"
@@ -198,14 +199,14 @@ metadata {
                 "Pump 1","Pump 2",
                 "refresh"])
          */ 
-         		details(["timedate","refresh",
+         		details(["timedate",
         		"airTemp", "waterTemp",
                 "poolLight", "spaLight", 
                 "spa","spaTemp",
                 "pool", "cleaner", 
                 "spillWay", "blower",
                 "Pump 1","Pump 2",
-                "refresh2"])
+                "refresh"])
 	}
 }
 
@@ -298,7 +299,7 @@ private getHeader(userpass){
 // orginal parse    
 def parse(String description) {
 	log.debug "Parse"
-    def circuitMap = [:]
+    //def circuitMap = [:]
     def msg = parseLanMessage(description)
     def circuit = [
         spa:1,
@@ -334,7 +335,7 @@ def parse(String description) {
       } else {  //process response from poll      
     
   	  msg.data.keySet().each {
-    	//log.debug "${it} -> " + msg.data.get(it)
+    	//log.debug "#-#-# ${it} -> " + msg.data.get(it)
         //sendEvent(name: it, value: msg.data.get(it))
         
         if (it == "time") {
@@ -376,18 +377,20 @@ def parse(String description) {
               //log.info "count of circuits = " + circuits.size
               
               // add values to circuitMap
-              //log.info "##### circuits = " + circuits
+              log.info "##### circuits = " + circuits
+              /*
               circuits.each {
               	    //log.debug "it = ${it}"
               		if (it != "blank") {
               			//log.debug "#### ${it} -> " + it.name + " , " + it.number
-                        circuitMap.put((it.name).toLowerCase(), it.number)
+                        //circuitMap.put((it.name).toLowerCase(), it.number)
                     }    
               }
+              */
              
               //log.info "##### circuitMap = " + circuitMap
              
-              state.cMap = circuitMap
+              //state.cMap = circuitMap
               def spaStatus = circuits[circuit.spa].status
               def airBlowerStatus = circuits[circuit.blower].status
               def poolLightStatus = circuits[circuit.poolLight].status
@@ -423,32 +426,20 @@ def parse(String description) {
         
         } else if (it == "pumps") {
           //log.info "-------- pumps ---------"
+          //log.debug "-#-#- ${it} -> " + msg.data.get(it)
+          def pdata = msg.data.get(it)
           def myit = it
           //log.info "myit = " + myit
-          (1..2).each {
+          
+          // ver 3 requires (1..2), were as ver 4 needs ('1'..'2')
+          ('1'..'2').each {
             //log.info "it =" + it
-            //log.info "TEST -- " + msg.data.get(myit)[it] + "myit = " + myit
-            def pump = [name:msg.data.get(myit)[it].name,
-              time:msg.data.get(myit)[it].time,
-              run:msg.data.get(myit)[it].run,
-              mode:msg.data.get(myit)[it].mode,
-              ds:msg.data.get(myit)[it].drivestate,
-              watts:msg.data.get(myit)[it].watts,
-              rpm:msg.data.get(myit)[it].rpm,
-              gpm:msg.data.get(myit)[it].gpm,
-              ppc:msg.data.get(myit)[it].ppc,
-              err:msg.data.get(myit)[it].err,
-              dtimer:msg.data.get(myit)[it].timer,
-              remotecontrol:msg.data.get(myit)[it].remotecontrol,
-              power:msg.data.get(myit)[it].power,
-              currentrunningMode:msg.data.get(myit)[it].currentrunning.mode,
-              currentrunningValue:msg.data.get(myit)[it].currentrunning.Value]
-            
-              //log.info "####### pump: ${pump}"
-              //log.info "Pump name = " + pump.name
-            
+            def pump = pdata[it]
+            log.info "Pump " + it + " Data -- " + pump            
+            //log.info "####### pump: ${pump}"
+            //log.info "Pump name = " + pump.name         
             //sendEvent
-            sendEvent(name: "${pump.name}", value: "${pump.name}\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.ds}\nMode :${pump.run}")
+            sendEvent(name: "${pump.name}", value: "${pump.name}\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
           }
         }
      }   
