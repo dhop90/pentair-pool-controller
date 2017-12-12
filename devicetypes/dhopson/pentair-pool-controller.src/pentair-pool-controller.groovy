@@ -23,18 +23,27 @@ metadata {
         capability "Refresh"
         capability "Temperature Measurement"
         capability "Thermostat"
+
         
         command "poolToggle"
         command "spaToggle"
         command "spaModeToggle"
-        command "poolLigtToggle"
+        command "poolLightToggle"
         command "spaLightToggle"
 		command "blowerToggle"
 		command "cleanerToggle"
         command "highspeedToggle"
         command "spillWayToggle"
-        command "lowerHeatingSetpoint"
-		command "raiseHeatingSetpoint"	
+        //command "lowerHeatingSetpoint"
+		//command "raiseHeatingSetpoint"	
+        
+        command "tempUp"
+		command "tempDown"
+		command "heatUp"
+		command "heatDown"
+		command "coolUp"
+		command "coolDown"
+		command "setTemperature", ["number"]
 	}
 
 	preferences {
@@ -62,7 +71,7 @@ metadata {
         
         // Temp
         valueTile("airTemp",  "device.airTemp",  width: 2, height: 2, canChangeBackground: true) {
-        	state("temperature", label:'${currentValue}°', icon: "st.Weather.weather2",
+        	state("temperature", label:'${currentValue}°', icon: "st.Home.home1",
             backgroundColors:[
                 [value: 31, color: "#153591"],
                 [value: 44, color: "#1e9cbb"],
@@ -101,8 +110,8 @@ metadata {
         // Lights
         standardTile("poolLight", "device.poolLight", width: 2, height: 2, canChangeBackground: true) {
 			state "unknown", label: 'poolLight', action: "poolLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
-            state "off", label: 'poolLight ${currentValue}', action: "poolLigtToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'poolLight ${currentValue}', action: "poolLigtToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
+            state "off", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
 		}
         standardTile("spaLight", "device.spaLight",   width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'spaLight', action: "spaLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
@@ -112,42 +121,53 @@ metadata {
 
         // spa turns on heater
         // This changes spa state
+        
         standardTile("spa", "device.spa", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'Spa', action: "spaUnknown", icon: "st.thermostat.heat", backgroundColor: "#F2F200"
 			state "off", label: '', action: "spaToggle", icon: "st.thermostat.heat", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: '', action: "spaToggle", icon: "st.thermostat.heating", backgroundColor: "#79b821", nextState: "off"
 		}
         
-        // HeatingSetpoint
-               
-        standardTile("lowerHeatingSetpoint", "device.heatingSetpoint", width:2, height:1, inactiveLabel: false, decoration: "flat") {
-			state "heatingSetpoint", action:"lowerHeatingSetpoint", icon:"st.thermostat.thermostat-left"
-		}
-		valueTile("heatingSetpoint", "device.heatingSetpoint", width:2, height:1, inactiveLabel: false, decoration: "flat", capability:"temperatureMeasurement") {
-			state "heatingSetpoint", label:'${currentValue}° heat', backgroundColor:"#ffffff"
-		}
-		standardTile("raiseHeatingSetpoint", "device.heatingSetpoint", width:2, height:1, inactiveLabel: false, decoration: "flat") {
-			state "heatingSetpoint", action:"raiseHeatingSetpoint", icon:"st.thermostat.thermostat-right"
-		}
         
         // HeatingSetpoint
-        /*
-        standardTile("lowerHeatingSetpoint", "capability.switch", width:2, height:1, inactiveLabel: false, decoration: "flat") {
-			state "theSwitch", action:"lowerHeatingSetpoint", icon:"st.thermostat.thermostat-left"
+ 		// Turns Spa heat on/off
+        standardTile("heatingSetpoint", "device.heatingSetpoint", width: 2, height: 2, canChangeBackground: true, key: "HEATING_SETPOINT") {
+        	//state "unknown", label: '${currentValue}° heat', action: "spaUnknown", icon: "st.Weather.weather2"
+			state "off", label: '${currentValue}', action: "spaToggle", icon: "st.Weather.weather2", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: '${currentValue}', action: "spaToggle", unit:"dF", icon: "st.Weather.weather2", backgroundColor: "#79b821", nextState: "off"
 		}
-		valueTile("heatingSetpoint", "capability.switch",         width:2, height:1, inactiveLabel: false, decoration: "flat") {
-			state "theSwitch", label:'${currentValue}° heat', backgroundColor:"#ffffff"
-		}
-		standardTile("raiseHeatingSetpoint", "capability.switch", width:2, height:1, inactiveLabel: false, decoration: "flat") {
-			state "theSwitch", action:"raiseHeatingSetpoint", icon:"st.thermostat.thermostat-right"
-		}
-        */
+        
+        ///////////////////////////////
+ 		multiAttributeTile(name:"thermostatFull", type:"thermostat", width:6, height:4) {
+    		tileAttribute("device.temperature", key: "PRIMARY_CONTROL") {
+        		attributeState("temp", label:'${currentValue}', unit:"dF", defaultState: true)
+    		}
+   			tileAttribute("device.temperature", key: "VALUE_CONTROL") {
+        		attributeState("VALUE_UP", action: "tempUp")
+        		attributeState("VALUE_DOWN", action: "tempDown")
+    		}
+    		tileAttribute("device.thermostatOperatingState", key: "OPERATING_STATE") {
+        		attributeState("idle", backgroundColor:"#00A0DC")
+       	 		attributeState("heating", backgroundColor:"#e86d13")
+    		}
+    		tileAttribute("device.thermostatMode", key: "THERMOSTAT_MODE") {
+        		attributeState("off", label:'${name}')
+        		attributeState("heat", label:'${name}')
+    		}
+    		tileAttribute("device.heatingSetpoint", key: "HEATING_SETPOINT") {
+        		attributeState("heatingSetpoint", label:'${currentValue}', unit:"dF", defaultState: true)
+    		}
+		} 
+        ////////////////////////////////
+        
         // spaMode : NOT USED
+        /*
         standardTile("spaMode", "device.spaMode", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'SpaMode', action: "spaModeUnknown", icon: "st.thermostat.heat", backgroundColor: "#F2F200"
 			state "off", label: '', action: "spaModeToggle", icon: "st.thermostat.heat", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: '', action: "spaModeToggle", icon: "st.thermostat.heating", backgroundColor: "#79b821", nextState: "off"
         }    
+        */
         
         // Pool filter
         standardTile("pool", "device.pool", width: 2, height: 2, canChangeBackground: true) {
@@ -206,11 +226,10 @@ metadata {
         
         main(["poolTemp"])
 
-        details(["timedate", "tempData", "freeze",
+        details(["timedate", "tempData", "thermostatFull", //"freeze",
         		"airTemp", "poolTemp","spaTemp",
-                "poolLight", "spaLight", "spa", "pool", "highspeed", "cleaner", 
-                "spillWay", "blower", //"blank",
-                "Pump 1","Pump 2", "refresh", "lowerHeatingSetpoint", "heatingSetpoint", "raiseHeatingSetpoint"])
+                "poolLight", "spaLight", "heatingSetpoint", "pool", "highspeed", "cleaner", 
+                "spillWay", "blower", "Pump 1","Pump 2", "refresh"])
 	}
 }
 
@@ -271,7 +290,6 @@ def parse(String description) {
         spillway:'8'
         ]
     
-     //def msgBody = msg.body
      def json = msg.json
      
      if (json.text) { //process response from toggle command
@@ -287,7 +305,8 @@ def parse(String description) {
               } else if (json.text.contains("SPILLWAY")) {
                   sendEvent(name: "spillWay", value: "${json.status}")
               } else if (json.text.contains("toggle SPA to")) {
-                  sendEvent(name: "spa", value: "${json.status}")
+                  //sendEvent(name: "spa", value: "${json.status}")
+                  sendEvent(name: "heatingSetPoint", value: "${json.status}")
               } else if (json.text.contains("POOL")) {
                   sendEvent(name: "pool", value: "${json.status}")
               } else if (json.text.contains("BLOWER")) {
@@ -295,27 +314,32 @@ def parse(String description) {
               }
       } else {  //process response from poll      
     
-  	  msg.data.keySet().each {
-    	//log.debug "#-#-# ${it} -> " + msg.data.get(it)
-        //sendEvent(name: it, value: msg.data.get(it))    
+  	  msg.data.keySet().each {   
         switch (it) {
         case "time":
+            log.info "### parse:time ###"
             def time = msg.data.get(it)
             def controllerTime = time.controllerTime
             def controllerDate = time.controllerDateStr
             // sendEvent
-            log.info "updating timedate Time: ${controllerTime} Date: ${controllerDate}"
+            // log.info "updating timedate Time: ${controllerTime} Date: ${controllerDate}"
             sendEvent(name: "timedate", value: "Time: ${controllerTime}\n Date: ${controllerDate}")
+            log.info "### finished time"
             break
-        case "heat":    
+        case "heat":  
+            log.info "### parse:heat ###"
             def heat = msg.data.get(it)
-            def PoolSetPoint = heat.poolSetPoint
-            def PoolHeatMode = heat.poolHeatModeStr
-            def SpaSetPoint = heat.spaSetPoint
-            def SpaHeatMode = heat.spaHeatModeStr
+            def poolSetPoint = heat.poolSetPoint
+            def poolHeatMode = heat.poolHeatModeStr
+            def spaSetPoint = heat.spaSetPoint
+            def spaHeatMode = heat.spaHeatModeStr
             def heaterActive = heat.heaterActive 
+            sendEvent(name: "temperature", value: "${spaSetPoint}")
+            sendEvent(name: "heatingSetpoint", value: "${spaSetPoint}")
+            log.info "### finished heat"
             break
-        case "temperatures":    
+        case "temperatures":
+            log.info "### parse:temperatures ###"
             def temperatures = msg.data.get(it)
             
             def poolTemp = temperatures.poolTemp
@@ -330,9 +354,9 @@ def parse(String description) {
             def spaHeatMode = temperatures.spaHeatMode
             def spaHeatModeStr = temperatures.spaHeatModeStr
             def heaterActive = temperatures.heaterActive
-            state.heatingSetpoint = spaSetPoint
-            //hSetpoint = spaSetPoint
-            log.debug "#### state.heatingSetpoint = ${state.heatingSetpoint}"
+            //state.heatingSetpoint = spaSetPoint
+
+            //log.debug "#### state.heatingSetpoint = ${state.heatingSetpoint}"
           
             // sendEvent
             log.info "updating airTemp:${airTemp}, poolTemp:${poolTemp}, spaTemp:${spaTemp}"
@@ -346,21 +370,17 @@ def parse(String description) {
             sendEvent(name: "spaSetPoint", value: "Spa Set Point: ${spaSetPoint}")
             sendEvent(name: "spaHeatMode", value: "Spa Heat Mode: ${spaHeatModeStr}")
             sendEvent(name: "heaterActive", value: "Heater Active: ${heaterActive}")
+
             sendEvent(name: "heatingSetpoint", value: "${spaSetPoint}")
-            
-			//def freezeOnOff = OnOffconvert(${freeze})
-            //${currentValue}° 
+            sendEvent(name: "temperature", value: "${spaSetPoint}")
+         
             def tempData = "Freeze: ${freeze}\n Pool Set Point: ${poolSetPoint}°\n Pool Heat Mode: ${poolHeatModeStr}\n Spa Set Point: ${spaSetPoint}°\n Spa Heat Mode: ${spaHeatModeStr}"
             log.info "tempData = ${tempData}"
             sendEvent(name: "tempData", value: "${tempData}")
-            
-            //sendEvent(name: "spaTempUp", value: "${spaTemp}")
-            //sendEvent(name: "spaTempDown", value: "${spaTemp}")
-            //sendEvent(name: "spaHeatMode", value: "{spaHeatMode}")
-            //sendEvent(name: "poolHeatMode", value: "{poolHeatMode}")
-
+			log.info "### finished temperatures"
             break
         case "circuits":
+              log.info "### parse:circuits ###"
               // Circuits        
               def circuits = msg.data.get(it)      
               //log.info "count of circuits = " + circuits.size          
@@ -375,26 +395,37 @@ def parse(String description) {
               def highSpeedStatus = circuits[circuit.highSpeed].status
               def spillwayStatus = circuits[circuit.spillway].status 
                                       
-			  log.debug "circuits: ${circuits}"
-              log.debug "spa: ${spaStatus}"
-              log.debug "blower: ${airBlowerStatus}"
-              log.debug "poolStatus: ${poolStatus}"
-              log.debug "highSpeedStatus: ${highSpeedStatus}"                   
+			  //log.debug "circuits: ${circuits}"
+              //log.debug "spa: ${spaStatus}"
+              //log.debug "blower: ${airBlowerStatus}"
+              //log.debug "poolStatus: ${poolStatus}"
+              //log.debug "highSpeedStatus: ${highSpeedStatus}"                   
            
               // sendEvent
-              log.info "poolLightStatus: ${poolLightStatus}, spaLightStatus: ${spaLightStatus}, poolStatus: ${poolStatus}, spaStatus: ${spaStatus}"
-              log.info "cleanerStatus: ${cleanerStatus}, spillwayStatus: ${spillwayStatus}, blowerStatus: ${airBlowerStatus}, highSpeedStatus: ${highSpeedStatus}"
+              log.info "poolLightStatus: ${poolLightStatus}\n, spaLightStatus: ${spaLightStatus}\n, poolStatus: ${poolStatus}\n, spaStatus: ${spaStatus}"
+              log.info "cleanerStatus: ${cleanerStatus}\n, spillwayStatus: ${spillwayStatus}\n, blowerStatus: ${airBlowerStatus}\n, highSpeedStatus: ${highSpeedStatus}"
                        
               sendEvent(name: "poolLight", value: OnOffconvert("${poolLightStatus}"))
               sendEvent(name: "spaLight", value: OnOffconvert("${spaLightStatus}"))
               sendEvent(name: "pool", value: OnOffconvert("${poolStatus}"))
-              sendEvent(name: "spa", value: OnOffconvert("${spaStatus}"))
+              //sendEvent(name: "spa", value: OnOffconvert("${spaStatus}"))
+              //sendEvent(name: "heatingSetpoint", value: OnOffconvert("${spaStatus}"))
+              
+              if (${spaStatus} == 1) {
+            	 def heatvalue = "heating"
+              } else {
+            	 def heatvalue = "idle"
+              }    
+              log.info "heatvalue = ${heatvalue}"
+              sendEvent(name: "thermostatOperatingState" , value: ${heatvalue})
               sendEvent(name: "cleaner", value: OnOffconvert("${cleanerStatus}"))
               sendEvent(name: "highspeed", value: OnOffconvert("${highSpeedStatus}"))
               sendEvent(name: "spillWay", value: OnOffconvert("${spillwayStatus}"))
               sendEvent(name: "blower", value: OnOffconvert("${airBlowerStatus}"))
+              log.info "### finished circuits"
         	  break
         case "pumps":      
+          log.info "### parse:pumps ###"
           //log.info "-------- pumps ---------"
           //log.debug "-#-#- ${it} -> " + msg.data.get(it)
           def pdata = msg.data.get(it)
@@ -408,11 +439,14 @@ def parse(String description) {
             //log.info "####### pump: ${pump}"
             //log.info "Pump name = " + pump.name         
             //sendEvent
-            sendEvent(name: "${pump.name}", value: "${pump.name}\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
+            sendEvent(name: "${pump.name}", value: "----- ${pump.name} -----\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
             } 
+            log.info "### finished pumps"
             break
          default:
-              log.info "end of switch statement"
+              log.info "### parse:default"
+              log.info "it = ${it}"
+              log.info "### finished default"
       }  
      }   
    }
@@ -451,20 +485,20 @@ def setFeature(query) {
 	return poolAction
 }
 
+/*
 def updated() {
     log.info "######### UPDATED #########"
-    //unsubscribe()
-    //initialize()
+    unsubscribe()
+    initialize()
 }
 
 def installed() {
-	log.info "In installed"
+	log.info "########## In installed ###########"
     initialize()
 }
 
 def initialize() {
-    log.info "in initialize"
-    state.dave="dave"
+    log.info "########### in initialize #########"
     state.circuit = [
         spa:'1',
         blower:'2',
@@ -475,8 +509,9 @@ def initialize() {
         highSpeed:'7',
         spillway:'8'
     ]
-    subscribe(theSwitch,"switch.on",incrementCounter)
+
 }
+*/
 
 def incremenentCount() {
 	state.temp = state.temp + 1
@@ -493,28 +528,11 @@ def spaModeToggle() {
     sendEvent(name: "spaMode", value: "heater")
 }
 
-/*
-def tempSetPoint() {
-    //state.temp = 100
-    state.temp = device.currentState(heatingSetpoint)
-    log.info "state.temp = ${state.temp}"
-	return state.temp
-}    
-*/
-
 def setSpaHeatPoint(num) {
     log.info "-------- setSpaHeatPoint --------"
     log.info "num = ${num}"
     setFeature("/spaheat/setpoint/${num}")
     //refresh()
-}
-
-def raiseHeatingSetpoint() {
-	alterSetpoint(true)
-}
-
-def lowerHeatingSetpoint() {
-	alterSetpoint(false)
 }
 
 def getTempInLocalScale(state) {
@@ -525,35 +543,17 @@ def getTempInLocalScale(state) {
 	return 0
 }
 
-def alterSetpoint(raise) {
-    log.info "In alterSetpoint, raise = ${raise}"
+def alterSetpoint(targetValue) {
+    log.info "In alterSetpoint"
 	def locationScale = getTemperatureScale()
 	def deviceScale = (state.scale == 1) ? "F" : "C"
-    def heatingSetpoint = getTempInLocalScale("state.heatingSetpoint")
-
-	def targetValue = state.heatingSetpoint
-    log.info "targetValue = ${targetValue}"
-	def delta = (locationScale == "F") ? 1 : 0.5
-	targetValue += raise ? delta : - delta
-	log.info "targetValue = ${targetValue}"
+    //def heatingSetpoint = getTempInLocalScale("state.heatingSetpoint")
     
-    sendEvent(name: "heatingSetpoint", value: "${targetValue}")
-	//sendEvent("name": "heatingSetpoint", "value": targetValue, unit: getTemperatureScale(), eventType: "ENTITY_UPDATE", displayed: true) 
-    setSpaHeatPoint(targetValue)           
-}
-
-// set the local value for the heatingSetpoint. Doesd NOT update the parent / Pentair platform!!!
-
-def setHeatingSetpoint(degrees) {
-   log.debug "setHeatingSetpoint " + device.deviceNetworkId + "-" + degrees
-	def timeNow = now()
-    if (degrees) {	
-    	if (!state.heatingSetpointTriggeredAt || (1 * 2 * 1000 < (timeNow - state.heatingSetpointTriggeredAt))) {
-			state.heatingSetpointTriggeredAt = timeNow               
-			state.heatingSetpoint = degrees.toDouble()
-			sendEvent(name: "heatingSetpoint", value:state.heatingSetpoint, unit: getTemperatureScale())    	
-		}
-	}
+    log.info "current heatingSetpoint ${targetValue}"
+   
+	//sendEvent(name: "heatingSetpoint", "value": targetValue, unit: getTemperatureScale(), eventType: "ENTITY_UPDATE", displayed: true) 
+    setSpaHeatPoint(targetValue)  
+    //runIn(240,refresh())
 }
 
 // toggle circuit
@@ -562,6 +562,8 @@ def spaToggle() {
     // turns spa heater off
 	log.debug "Executing 'spaToggle'"
 	setFeature("/circuit/1/toggle/")
+    //sendEvent(name: "device.thermostatMode", value:"Mode")
+    //sendEvent(name: "device.thermostatOperatingState", value:"OperatingState")
 }
 
 def blowerToggle() {
@@ -569,7 +571,7 @@ def blowerToggle() {
 	setFeature("/circuit/2/toggle/")
 }
 
-def poolLigtToggle() {
+def poolLightToggle() {
 	log.debug "Executing 'poolLightToggle'"
 	setFeature("/circuit/3/toggle/")
 }
@@ -599,12 +601,6 @@ def spillWayToggle() {
 	setFeature("/circuit/8/toggle/")
 }
 
-def setSpaTemperature(number) {
-}
-
-def setPoolTemperature(number) {
-}
-
 private delayAction(long time) {
     new physicalgraph.device.HubAction("delay $time")
 }
@@ -629,4 +625,104 @@ private String convertIPtoHex(ipAddress) {
 private String convertPortToHex(port) {
     String hexport = port.toString().format( '%04x', port.toInteger() )
     return hexport
+}
+
+def tempUp() {
+	def ts = device.currentState("temperature")
+    def hs = device.currentState("heatingSetpoint")
+    log.info "tempUp:ts = ${ts.value}"
+    log.info "tempUp:hs = ${hs.value}"
+    //def ts = device.currentState("heatingSetpoint")
+	def value = ts ? ts.integerValue + 1 : 72
+    log.info "value = ${value}"
+	sendEvent(name:"temperature", value: "${value}")
+    sendEvent(name:"heatingSetpoint", value: "${value}")
+    log.info "calling evaluate"
+	evaluate(value, device.currentValue("heatingSetpoint"), "heat")
+    log.info "calling alterSetpoint"
+    alterSetpoint(value)
+}
+
+def tempDown() {
+	def ts = device.currentState("temperature")
+    def hs = device.currentState("heatingSetpoint")
+    log.info "tempUp:ts = ${ts.value}"
+    log.info "tempUp:hs = ${hs.value}"
+    //def ts = device.currentState("heatingSetpoint")
+	def value = ts ? ts.integerValue - 1 : 72
+    log.info "value = ${value}"
+	sendEvent(name:"temperature", value: "${value}")
+    sendEvent(name:"heatingSetpoint", value: "${value}")
+    log.info "calling evaluate"
+	evaluate(value, device.currentValue("heatingSetpoint"), "heat")
+    log.info "calling alterSetpoint"
+    alterSetpoint(value)
+}
+
+def setTemperature(value) {
+	def ts = device.currentState("temperature")
+	sendEvent(name:"temperature", value: value)
+	evaluate(value, device.currentValue("heatingSetpoint"), "off")
+}
+
+/*
+def heatUp() {
+    log.info "HEATUP"
+	def ts = device.currentState("heatingSetpoint")
+	def value = ts ? ts.integerValue + 1 : 68
+	sendEvent(name:"heatingSetpoint", value: "${value}°")
+	evaluate(device.currentValue("temperature"), value, "off")
+}
+
+def heatDown() {
+    log.info "TEMPDOWN"
+	def ts = device.currentState("heatingSetpoint")
+	def value = ts ? ts.integerValue - 1 : 68
+	sendEvent(name:"heatingSetpoint", value: "${value}°")
+	evaluate(device.currentValue("temperature"), value, "off")
+}
+*/
+
+def evaluate(temp, heatingSetpoint, mode) {
+	log.debug "evaluate($temp, $heatingSetpoint)"
+	def threshold = 1.0
+	def current = device.currentValue("thermostatOperatingState")
+	//def mode = device.currentValue("thermostatMode")
+
+	def heating = false
+	def cooling = false
+	def idle = false
+	if (mode in ["heat","emergency heat","auto"]) {
+		if (heatingSetpoint - temp >= threshold) {
+			heating = true
+			sendEvent(name: "thermostatOperatingState", value: "heating")
+		}
+		else if (temp - heatingSetpoint >= threshold) {
+			idle = true
+		}
+		sendEvent(name: "thermostatSetpoint", value: heatingSetpoint)
+	}
+    /*
+	if (mode in ["cool","auto"]) {
+		if (temp - coolingSetpoint >= threshold) {
+			cooling = true
+			sendEvent(name: "thermostatOperatingState", value: "cooling")
+		}
+		else if (coolingSetpoint - temp >= threshold && !heating) {
+			idle = true
+		}
+		sendEvent(name: "thermostatSetpoint", value: coolingSetpoint)
+	}
+    */
+	else {
+		sendEvent(name: "thermostatSetpoint", value: heatingSetpoint)
+	}
+
+	if (mode == "off") {
+		idle = true
+	}
+
+	if (idle && !heating && !cooling) {
+		sendEvent(name: "thermostatOperatingState", value: "idle")
+	}
 }
