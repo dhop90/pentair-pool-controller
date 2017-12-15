@@ -3,7 +3,6 @@ Smarthings UI for use with the nodejs-PoolController
 
 # License
 
-SmartThings_Pentair.  
 An application to control pool equipment from within Smartthings.
 
 This program is free software: you can redistribute it and/or modify
@@ -57,3 +56,26 @@ A collection of devices designed to interface with a nodejs-poolControlller inst
     	- Controller IP and Port - Set these to match the device where you have nodejs-PoolController running
       - username/password if you have "expressAuth": 1 configured in config.sjon (currently this is mandatory, but can be easily changed)
 
+## Issues
+Currently this is very specific to my setup.  Manual changes to the Device Handler to fit your environment.
+
+Change circuit definition in parse function as needed
+circuit = [
+        spa:'1',
+        blower:'2',
+        poolLight:'3',
+        spaLight:'4',
+        cleaner:'5',
+        pool:'6',
+        highSpeed:'7',
+        spillway:'8'
+        ]
+As well as all toggle functions (i.e. spa Toggle) 
+```
+def spaToggle() {
+    // turns spa heater on/off
+	log.info "Executing 'spaToggle'"
+	setFeature("/circuit/1/toggle/")
+}
+```
+Replace ~/circuit/#~ to match your environment
