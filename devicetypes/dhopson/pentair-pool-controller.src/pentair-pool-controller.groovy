@@ -28,23 +28,23 @@ metadata {
         command "spaModeToggle"
         command "poolLightToggle"
         command "spaLightToggle"
-		command "blowerToggle"
-		command "cleanerToggle"
+	command "blowerToggle"
+	command "cleanerToggle"
         command "highspeedToggle"
         command "spillWayToggle"	
        
         command "tempUp"
-		command "tempDown"
+	command "tempDown"
 	}
 
 	preferences {
        	section("Select your controller") {
-       		input "controllerIP", "text", title: "Controller hostname/IP", required: true
+		input "controllerIP", "text", title: "Controller hostname/IP", required: true
        		input "controllerPort", "port", title: "Controller port", required: true
-            input "username", "string", title:"Username", description: "username", required: false, displayDuringSetup: true
-            input "password", "password", title:"Password", description: "Password", required: false, displayDuringSetup: true
+            	input "username", "string", title:"Username", description: "username", required: false, displayDuringSetup: true
+            	input "password", "password", title:"Password", description: "Password", required: false, displayDuringSetup: true
  		}
-    }
+    	}
     
 	simulator {
 		// TODO: define status and reply messages here
@@ -56,11 +56,6 @@ metadata {
 			state "val", label:'${currentValue}', defaultState: true
 		}
  
-        // Temperature Data
-        // valueTile("tempData", "device.tempData", width:2, height: 2) {
-        // 	state "val", label:'${currentValue}', defaultState: true
-        // }
-        
         valueTile("freeze", "device.freeze", width:2, height: 2) {
         	state "val", label:'${currentValue}', defaultState: true
         }
@@ -111,14 +106,14 @@ metadata {
         
         // Lights
         standardTile("poolLight", "device.poolLight", width: 2, height: 2, canChangeBackground: true) {
-			state "unknown", label: 'poolLight', action: "poolLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
-            state "off", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
+		state "unknown", label: 'poolLight', action: "poolLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
+            	state "off", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
+		state "on", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
 		}
         standardTile("spaLight", "device.spaLight",   width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'spaLight', action: "spaLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
-			state "off", label: 'spaLight ${currentValue}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'spaLight ${currentValue}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
+		state "off", label: 'spaLight ${currentValue}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
+		state "on", label: 'spaLight ${currentValue}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
 		}
 
         // spa tile turns on heater
@@ -126,36 +121,36 @@ metadata {
         
         standardTile("spa", "device.spa", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'Spa', action: "spaUnknown", icon: "st.Bath.bath4", backgroundColor: "#F2F200"
-			state "off", label: '${currentValue°}', action: "spaToggle", backgroundColor: "#ffffff", nextState: "on", icon: "st.Bath.bath4" //,icon: "st.thermostat.heat"
-			state "on", label: '${currentValue°}', action: "spaToggle", backgroundColor: "#79b821", nextState: "off", icon: "st.Bath.bath4" //,icon: "st.thermostat.heating"
+		state "off", label: '${currentValue°}', action: "spaToggle", backgroundColor: "#ffffff", nextState: "on", icon: "st.Bath.bath4" //,icon: "st.thermostat.heat"
+		state "on", label: '${currentValue°}', action: "spaToggle", backgroundColor: "#79b821", nextState: "off", icon: "st.Bath.bath4" //,icon: "st.thermostat.heating"
         }
           
         valueTile("Schedule", "device.Schedule", width: 6, height: 5, type:"generic", decoration:"flat") {
-			state "val", label:'${currentValue}', defaultState: false
-		}
+		state "val", label:'${currentValue}', defaultState: false
+	}
         valueTile("EggTimer", "device.EggTimer", width: 6, height: 3, type:"generic", decoration: "flat") {
-			state "val", label:'${currentValue}', defaultState: false
-		}  
+		state "val", label:'${currentValue}', defaultState: false
+	}  
 
         // Widget to change heating set point
 
         // PRIMARY_CONTROL	Used to display the current temperature.
-		// VALUE_CONTROL	Renders controls for increasing or decreasing the temperature.
-		// SECONDARY_CONTROL	Used to display textual data about the thermostat, like humidity. Appears on the bottom-left of the tile.
-		// OPERATING_STATE	What the thermostat is doing					The label will not show if OPERATING_STATE is omitted, as this is the baseline amount of meaningful information
-		// THERMOSTAT_MODE	Thermostat Mode (i.e. Heat, Cool, or Auto)		This allows the user to know the Mode (and temperature) if the system is idle (e.g. “Idle—Heat at 66°”)
-		// HEATING_SETPOINT	At which point the system will begin heating	Informs the user when heating will start (or stop, if currently heating)
-		// COOLING_SETPOINT	At which point the system will begin cooling	Informs the user when cooling will start (or stop, if currently cooling)
+	// VALUE_CONTROL	Renders controls for increasing or decreasing the temperature.
+	// SECONDARY_CONTROL	Used to display textual data about the thermostat, like humidity. Appears on the bottom-left of the tile.
+	// OPERATING_STATE	What the thermostat is doing					The label will not show if OPERATING_STATE is omitted, as this is the baseline amount of meaningful information
+	// THERMOSTAT_MODE	Thermostat Mode (i.e. Heat, Cool, or Auto)		This allows the user to know the Mode (and temperature) if the system is idle (e.g. “Idle—Heat at 66°”)
+	// HEATING_SETPOINT	At which point the system will begin heating	Informs the user when heating will start (or stop, if currently heating)
+	// COOLING_SETPOINT	At which point the system will begin cooling	Informs the user when cooling will start (or stop, if currently cooling)
 
         ///////////////////////////////
         
- 		multiAttributeTile(name:"thermostatFullspa", type:"thermostat", width:6, height:4) {
-        	// center
+ 	multiAttributeTile(name:"thermostatFullspa", type:"thermostat", width:6, height:4) {
+       		// center
     		tileAttribute("device.temperature", key: "PRIMARY_CONTROL") {
         		attributeState("temp", label:'${currentValue}°', unit:"dF", defaultState: true)
     		}
             // right up/down
-   			tileAttribute("device.temperature", key: "VALUE_CONTROL") {
+   		tileAttribute("device.temperature", key: "VALUE_CONTROL") {
         		attributeState("VALUE_UP", action: "tempUp")
         		attributeState("VALUE_DOWN", action: "tempDown")
     		}
@@ -166,10 +161,10 @@ metadata {
     		}
             // bottom center
     		tileAttribute("device.spaHeatMode", key: "THERMOSTAT_MODE") {
-                attributeState("Off", label:'${name}')
+                	attributeState("Off", label:'${name}')
         		attributeState("Heater", label:'${name}')
-                attributeState("Solar Pref", label:'${name}')
-                attributeState("Solar Only", label:'${name}')
+                	attributeState("Solar Pref", label:'${name}')
+                	attributeState("Solar Only", label:'${name}')
     		}
             // Not sure what this does
     		tileAttribute("device.heatingSetpoint", key: "HEATING_SETPOINT") {
@@ -179,18 +174,18 @@ metadata {
             tileAttribute("device.spaTemp", key: "SECONDARY_CONTROL") {
         		attributeState("spaTemp", label:'${currentValue}°', defaultState: true)
     		}
-		} 
+	} 
         
      /* 
      	# Uncomment if you want to control heating of the pool and not just the spa
         
- 		multiAttributeTile(name:"thermostatFullpool", type:"thermostat", width:3, height:2) {
+ 	multiAttributeTile(name:"thermostatFullpool", type:"thermostat", width:3, height:2) {
         	// center
     		tileAttribute("device.pooltemperature", key: "PRIMARY_CONTROL") {
-        		attributeState("temp", label:'${currentValue}°', unit:"dF", defaultState: true)
+       			attributeState("temp", label:'${currentValue}°', unit:"dF", defaultState: true)
     		}
-            // right up/down
-   			tileAttribute("device.pooltemperature", key: "VALUE_CONTROL") {
+            	// right up/down
+   		tileAttribute("device.pooltemperature", key: "VALUE_CONTROL") {
         		attributeState("VALUE_UP", action: "tempUp")
         		attributeState("VALUE_DOWN", action: "tempDown")
     		}
@@ -201,10 +196,10 @@ metadata {
     		}
             // bottom center
     		tileAttribute("device.poolHeatMode", key: "THERMOSTAT_MODE") {
-                attributeState("Off", label:'${name}')
+                	attributeState("Off", label:'${name}')
         		attributeState("Heater", label:'${name}')
-                attributeState("Solar Pref", label:'${name}')
-                attributeState("Solar Only", label:'${name}')
+               		attributeState("Solar Pref", label:'${name}')
+                	attributeState("Solar Only", label:'${name}')
     		}
             // Not sure what this does
     		tileAttribute("device.poolheatingSetpoint", key: "HEATING_SETPOINT") {
