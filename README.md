@@ -5,7 +5,6 @@ Smarthings UI for use with the nodejs-PoolController
 
 SmartThings_Pentair.  
 An application to control pool equipment from within Smartthings.
-Copyright (C) 2017-2018  Brad Sileo / bsileo / brad@sileo.name
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -32,8 +31,6 @@ Readme stolen from [bsileo](https://github.com/bsileo/SmartThings_Pentair)
 ## What is the Smartthing Penatair Pool Controller
 A collection of devices designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Includes devices to manage the Pool pump, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
 
-
-<img src="https://github.com/bsileo/SmartThings_Pentair/blob/master/SmartthingsPoolControlScreenshot.png" height="300">
 
 ***
 
