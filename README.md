@@ -24,7 +24,8 @@ Requries Russell Goldin (tagyoureit) nodejs-poolController be running on your ne
 
 Readme borrowed from [bsileo](https://github.com/bsileo/SmartThings_Pentair)
 
-# Details
+## What is the Smartthing Penatair Pool Controller
+A collection of devices designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Single smartthings app to manage the Pool pumps, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
 
 iPhone layout:
 
@@ -33,11 +34,6 @@ iPhone layout:
 iPad layout:
 
 <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1088.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1089.PNG" height="300">
-
-
-## What is the Smartthing Penatair Pool Controller
-A collection of devices designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Single smartthings app to manage the Pool pumps, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
-
 
 ***
 
