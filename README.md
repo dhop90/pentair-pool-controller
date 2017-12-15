@@ -27,7 +27,7 @@ Readme stolen from [bsileo](https://github.com/bsileo/SmartThings_Pentair)
 <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6035.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6036.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6037.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6038.PNG" height="300">
 
 ## What is the Smartthing Penatair Pool Controller
-A collection of devices designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Includes devices to manage the Pool pump, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
+A collection of devices designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Single smartthings app to manage the Pool pumps, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
 
 
 ***
@@ -38,7 +38,7 @@ A collection of devices designed to interface with a nodejs-poolControlller inst
           https://github.com/tagyoureit/nodejs-poolController
 2. Update your Nodejs-Poolcontroller installation with the Smartthings interface
 
-3. Install the new Device Handlers into the Smartthings IDE (http://graph.api.smartthings.com/)
+3. Install the new Device Handler into the Smartthings IDE (http://graph.api.smartthings.com/)
    - Pentair Pool Controller
 
    1. Go to [https://graph.api.smartthings.com/ide/devices]
@@ -50,13 +50,13 @@ A collection of devices designed to interface with a nodejs-poolControlller inst
 
 4. Install a new device of type Pentair Pool Controller and configure it.
     - Go to https://graph.api.smartthings.com/device/list, click New Device, complete the form selecting "Pentair Pool Controller" for the type. 
-    - Be sure to fill in the correct Device Network ID - same as the Controller MAC Address below.   
+    - Be sure to fill in the correct Device Network ID.   
     - In the IDE (or Preferences in the SmartThings App) you can update all preferences for the Device:
     	- Controller IP and Port - Set these to match the device where you have nodejs-PoolController running
-      - username/password if you have "expressAuth": 1 configured in config.sjon (currently this is mandatory, but can be easily changed)
+        - username/password if you have `"expressAuth": 1` configured in config.sjon
 
 ## Issues
-Currently this is very specific to my setup.  Manual changes to the Device Handler to fit your environment.
+Currently this is very specific to my setup.  Manually change the Device Handler to fit your environment.
 
 Change circuit definition in parse function as needed
 ```
@@ -71,7 +71,7 @@ circuit = [
         spillway:'8'  
         ]
 ```	
-As well as all toggle functions (i.e. spa Toggle) 
+As well as all toggle functions (i.e. spaToggle) 
 ```
 def spaToggle() {
     // turns spa heater on/off
@@ -79,4 +79,4 @@ def spaToggle() {
 	setFeature("/circuit/1/toggle/")
 }
 ```
-Replace `/circuit/#` to match your environment
+Modify `/circuit/#` to match your environment
