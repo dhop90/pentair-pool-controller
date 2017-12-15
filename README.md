@@ -60,15 +60,15 @@ A collection of devices designed to interface with a nodejs-poolControlller inst
 Currently this is very specific to my setup.  Manual changes to the Device Handler to fit your environment.
 
 Change circuit definition in parse function as needed
-circuit = [
-        spa:'1',
-        blower:'2',
-        poolLight:'3',
-        spaLight:'4',
-        cleaner:'5',
-        pool:'6',
-        highSpeed:'7',
-        spillway:'8'
+circuit = [  
+        spa:'1',  
+        blower:'2',  
+        poolLight:'3',  
+        spaLight:'4',  
+        cleaner:'5',  
+        pool:'6',  
+        highSpeed:'7',  
+        spillway:'8'  
         ]
 As well as all toggle functions (i.e. spa Toggle) 
 ```
@@ -78,4 +78,4 @@ def spaToggle() {
 	setFeature("/circuit/1/toggle/")
 }
 ```
-Replace ~/circuit/#~ to match your environment
+Replace `/circuit/#` to match your environment
