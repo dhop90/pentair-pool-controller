@@ -24,13 +24,13 @@ Requries Russell Goldin (tagyoureit) nodejs-poolController be running on your ne
 
 Readme stolen from [bsileo](https://github.com/bsileo/SmartThings_Pentair)
 
-iPhone images:
+iPhone layout:
 
 <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6035.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6036.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6037.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6038.PNG" height="300">
 
-iPad images:
+iPad layout:
 
-<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1088.PNG" height="300"><img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1089.PNG" height="300">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1088.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1089.PNG" height="300">
 
 
 ## What is the Smartthing Penatair Pool Controller
