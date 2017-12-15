@@ -22,10 +22,9 @@ Adapted from Michael Usner's smartthings app controller from [here](https://gith
 
 Requries Russell Goldin (tagyoureit) nodejs-poolController be running on your network.  For details please visit [here](https://github.com/tagyoureit/nodejs-poolController)
 
-<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6035.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6036.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6037.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6038.PNG" height="300">
-
 Readme stolen from [bsileo](https://github.com/bsileo/SmartThings_Pentair)
 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6035.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6036.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6037.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6038.PNG" height="300">
 
 ## What is the Smartthing Penatair Pool Controller
 A collection of devices designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Includes devices to manage the Pool pump, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
