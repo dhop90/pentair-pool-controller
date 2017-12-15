@@ -55,11 +55,6 @@ metadata {
         valueTile("timedate", "device.timedate", width: 2, height: 2) {
 			state "val", label:'${currentValue}', defaultState: true
 		}
- 
-        // Temperature Data
-        // valueTile("tempData", "device.tempData", width:2, height: 2) {
-        // 	state "val", label:'${currentValue}', defaultState: true
-        // }
         
         valueTile("freeze", "device.freeze", width:2, height: 2) {
         	state "val", label:'${currentValue}', defaultState: true
@@ -301,8 +296,7 @@ metadata {
         
         standardTile("spaDown", "device.spaDown", width: 2, height: 2) {
 			state "down", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "push", backgroundColor: "#ffffff"
-  			state "push", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "down", backgroundColor: "#cccccc"
-           
+  			state "push", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "down", backgroundColor: "#cccccc"           
 		}
         
         standardTile("poolUp", "device.poolUp", width: 2, height: 2) {
