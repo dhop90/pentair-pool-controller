@@ -40,8 +40,7 @@ metadata {
         command "addSchedule"
         command "delSchedule"
 	}
-
-    
+   
     preferences {
        	section("Select your controller") {
        		input "controllerIP", "text", title: "Controller hostname/IP", required: true
@@ -49,9 +48,10 @@ metadata {
             input "username", "string", title:"Username", description: "username", required: true, displayDuringSetup: true
             input "password", "password", title:"Password", description: "Password", required: true, displayDuringSetup: true
             }
+            
          section("Schedules") {   
-            input name: "controllerTime", type: "time", title: "System Time", descripiton: "Enter Time", required: false
-            input name: "EggTimer", type: "bool", title: "Is this an egg timer?", description: "Egg timer?", required: false
+            input name: "controllerTime", type: "time", title: "System Time", descripiton: "Enter Time, then select time tile to update", required: false
+            input name: "EggTimer", type: "bool", title: "Is this an egg timer?", description: "Egg timer and not a Schedule?", required: false
             input name: "sch_circuit", type: "enum", title: "Circuit Name", description: "Which circuit should be used for this schedule", required: false, options:[
                     "spa",
         			"blower",
@@ -61,7 +61,7 @@ metadata {
         			"pool",
         			"highSpeed",
         			"spillway"]
-            input name: "sch_id", type: "enum", title: "Schedule ID", description: "ID is used for both schedule addition and deletion", required: false, options:[
+            input name: "sch_id", type: "enum", title: "Schedule ID", description: "ID is used for both schedule/eggtimer addition and deletion", required: false, options:[
                     "1",
         			"2",
         			"3",
@@ -87,6 +87,7 @@ metadata {
                     "Friday", 
                     "Saturday", 
                     "Sunday"]
+                    //https://community.smartthings.com/t/input-preferences-for-device-type-with-multiple-true/15330 - issue   
              */       
              input name: "Monday", type: "bool", title: "Schedule Monday?", description: "Should the task be scheduled for this day?", required: false 
              input name: "Tuesday", type: "bool", title: "Schedule Tuesday?", description: "Should the task be scheduled for this day?", required: false
@@ -94,10 +95,7 @@ metadata {
              input name: "Thursday", type: "bool", title: "Schedule Thursday?", description: "Should the task be scheduled for this day?", required: false
              input name: "Friday", type: "bool", title: "Schedule Friday?", description: "Should the task be scheduled for this day?", required: false
              input name: "Saturday", type: "bool", title: "Schedule Saturday?", description: "Should the task be scheduled for this day?", required: false
-             input name: "Sunday", type: "bool", title: "Schedule Sunday?", description: "Should the task be scheduled for this day?", required: false
-
-             
-        //https://community.smartthings.com/t/input-preferences-for-device-type-with-multiple-true/15330 - issue    
+             input name: "Sunday", type: "bool", title: "Schedule Sunday?", description: "Should the task be scheduled for this day?", required: false 
         }
       }  
     
@@ -109,7 +107,7 @@ metadata {
     	// Display time and date from pool controller
         
         // refresh
-        standardTile("refresh", "device.refresh", width: 2, height: 2) {
+        standardTile("refresh", "device.refresh", width: 2, height: 2, canChangeBackground: true) {
         	state "Idle", label:'refresh', action:"refresh", icon:"st.secondary.refresh-icon", nextState: "Active", backgroundColor: "#ffffff"
             state "Active", label:'refresh', action:"refresh", icon:"st.secondary.refresh-icon", nextState: "Idle", backgroundColor: "#cccccc"
     	}      
@@ -210,7 +208,7 @@ metadata {
  		// Turns Spa heat on/off
         // Can use thermostatFull to change heater set point
         
-        standardTile("spaDown", "device.spaDown", width: 2, height: 2) {
+        standardTile("spaDown", "device.spaDown", width: 2, height: 2, canChangeBackground: true) {
 			state "down", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "push", backgroundColor: "#ffffff"
   			state "push", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "down", backgroundColor: "#cccccc"           
 		}
@@ -218,7 +216,7 @@ metadata {
 			 state "off", label: '${name}: ${currentValue}', action: "spaToggle", unit: "dF", icon: "st.Bath.bath4", backgroundColor: "#ffffff", nextState: "on"
 			 state "on" , label: '${name}: ${currentValue}', action: "spaToggle", unit: "dF", icon: "st.Bath.bath4", backgroundColor: "#79b821", nextState: "off"
 		}
-        standardTile("spaUp", "device.spaUp", width: 2, height: 2) {
+        standardTile("spaUp", "device.spaUp", width: 2, height: 2, canChangeBackground: true) {
 			state "up", label: 'Up', action: "tempUp",icon: "st.thermostat.thermostat-up",nextState: "push", backgroundColor: "#ffffff"
 			state "push", label: 'Up', action: "tempUp",icon: "st.thermostat.thermostat-up",nextState: "up", backgroundColor: "#cccccc"
     	}
@@ -281,7 +279,7 @@ metadata {
         valueTile("Schedule", "device.Schedule", width: 6, height: 7, type:"generic", decoration:"flat") {
 			state "val", label:'${currentValue}', defaultState: false
 		}
-        valueTile("EggTimer", "device.EggTimer", width: 6, height: 5, type:"generic", decoration: "flat") {
+        valueTile("EggTimer", "device.EggTimer", width: 6, height: 3, type:"generic", decoration: "flat") {
 			state "val", label:'${currentValue}', defaultState: false
 		}  
 
@@ -323,12 +321,12 @@ metadata {
 			state "on", label: 'Time', action: "setdatetime", backgroundColor: "#ffffff",icon: "st.secondary.refresh-icon"
 		}
         
-        standardTile("setschedule", "device.setschedule", width: 2, height: 2) {
-			state "on", label: 'Sch Add', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.thermostat.thermostat-up"
+        standardTile("setschedule", "device.setschedule", width: 2, height: 2, canChangeBackground: true) {
+			state "on", label: 'Schedule', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.add-icon"
 		}   
         
-        standardTile("delschedule", "device.delschedule", width: 2, height: 2) {
-			state "on", label: 'Sch Del', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.thermostat.thermostat-down"
+        standardTile("delschedule", "device.delschedule", width: 2, height: 2, canChangeBackground: true) {
+			state "on", label: 'Schedule', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.subtract-icon"
 		}   
         
         
@@ -341,11 +339,11 @@ metadata {
         "poolLight", "spaLight", "highspeed", 
         "cleaner", "spillWay", "blower", 
         "spaDown","heatingSetpoint","spaUp",
-        "pool","blank", 
+        "pool","setschedule", "delschedule", 
+        "thermostatFullspa",        
         "Pump 1","Pump 2",
-        "thermostatFullspa",
-        "Schedule",
-        "EggTimer", "setschedule", "delschedule"
+        "EggTimer",        
+        "Schedule"
  		])
 	}
 }
@@ -361,10 +359,21 @@ def installed() {
     initialize()
     setDeviceNetworkId("${controllerIP}","${controllerPort}")
     sch_dow = []
+    
 }
 
 def initialize() {
 	runEvery1Minute(refresh)
+    state.circuit = [
+        spa:'1',
+        blower:'2',
+        poolLight:'3',
+        spaLight:'4',
+        cleaner:'5',
+        pool:'6',
+        highSpeed:'7',
+        spillway:'8'
+        ]
 }
 
 def refresh() {
@@ -426,34 +435,31 @@ def calc_dow() {
     log.debug "calc = "+ calc
 */    
     
-    def day_value2 = [Sunday:1,Monday:2,Tuesday:4,Wednesday:8,Thursday:16,Friday:32,Saturday:64]    
-    def day_list2 = ["Sunday":Sunday, 
+    def dayValueMap = [Sunday:1,Monday:2,Tuesday:4,Wednesday:8,Thursday:16,Friday:32,Saturday:64]    
+    def dayMap = ["Sunday":Sunday, 
                      "Monday":Monday, 
                      "Tuesday":Tuesday, 
                      "Wednesday":Wednesday, 
                      "Thursday":Thursday, 
                      "Friday":Friday, 
                      "Saturday":Saturday]
-    def day_list = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    log.debug "day_list2 = ${day_list2}"
-    log.debug "day_list = ${day_list}"
+    def dayList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     
-    def calc2 = 0
-    def num = 0
-    day_list.each {
+    def calc = 0
+
+    dayList.each {
        log.debug "it = ${it}"
-       if (day_list2[it]) {
-          num = day_value2[it]
-          //log.debug "num = ${num}"         
-          calc2 = calc2 + num
+       if (dayMap[it]) {        
+          calc = calc + dayValueMap[it]
        }   
     }   
-    log.debug "calc2 = ${calc2}"
+    log.debug "calc = ${calc}"
     
-    return (calc2)
+    return (calc)
 }
 
 def get_circuit_num(name) {
+/*
     def circuit = [
         spa:'1',
         blower:'2',
@@ -464,17 +470,24 @@ def get_circuit_num(name) {
         highSpeed:'7',
         spillway:'8'
         ]
-    log.debug "get_circuit_num: name = ${name}, number = ${circuit[name]}"    
-    return circuit[name]
+ */       
+    log.debug "get_circuit_num: name = ${name}, number = ${state.circuit[name]}"    
+    return state.circuit[name]
 }
 
-
+// API calls in server.js file on https://github.com/tagyoureit/nodejs-poolController/blob/b3d31a94daf486058d9a8d8043d9039d3a459487/src/lib/comms/server.js
+// curl -X GET http://user:pass@pi-pool:3000/schedule | jq '.schedule | ."7"'
+// curl -X GET http://user:pass@pi-pool:3000/schedule/set/7/3/21/00/22/00/127
+// curl -X GET http://user:pass@pi-pool:3000/schedule/set/id/7/circuit/3
 def addSchedule() {
     if (!sch_circuit | !sch_id) return
-    def sch_circuit_num = get_circuit_num(sch_circuit)
+    //def sch_circuit_num = get_circuit_num(sch_circuit)
+    def sch_circuit_num = state.circuit[sch_circuit]
     if (EggTimer) {
        if (!sch_id) return 
        def addeggtimer = setFeature("/eggtimer/set/id/${sch_id}/circuit/${sch_circuit_num}/hour/${egg_hour}/min/${egg_min}")
+       // "/circuit/${state.circuit['spa']}/toggle/"
+       //def addeggtimer = setFeature("/eggtimer/set/id/${sch_id}/circuit/${state.circuit[${sch_circuit}]}/hour/${egg_hour}/min/${egg_min}")
        sendHubCommand(addeggtimer)
     } else {
        if (!sch_start | !sch_end) return
@@ -492,14 +505,15 @@ def addSchedule() {
        // ----- setFeature : query = /schedule/set/7/3/21/00/22/00/127 -------
        // Response: REST API received request to set schedule 7 with values (start) 21:0 (end) 22:0 with days value 127
        // Response: REST API received request to set circuit on schedule with ID (7) to POOL LIGHT
-       def addschedule = setFeature("/schedule/set/${sch_id}/${sch_circuit_num}/${sch_starthh}/${sch_startmm}/${sch_endhh}/${sch_endmm}/${sch_dow_num}")
-       log.debug "addschedule = ${addschedule}"
-       sendHubCommand(addschedule)
  
        def scheduleCircuit = setFeature("/schedule/set/id/${sch_id}/circuit/${sch_circuit_num}")
        log.debug "scheduleCircuit = ${scheduleCircuit}"
        log.debug "schedule set id:${sch_id} to circuit:${sch_circuit_num}"    
        sendHubCommand(scheduleCircuit)
+             
+       def addschedule = setFeature("/schedule/set/${sch_id}/${sch_circuit_num}/${sch_starthh}/${sch_startmm}/${sch_endhh}/${sch_endmm}/${sch_dow_num}")
+       log.debug "addschedule = ${addschedule}"
+       sendHubCommand(addschedule)
     }
 }
 
@@ -509,6 +523,7 @@ def parse(String description) {
     log.debug "id = ${device.id} hub = ${device.hub} data = ${device.data}"
     def msg = parseLanMessage(description)
     // version 4 requires pump number be a string, version 3 used integers 
+    /*
     def circuit = [
         spa:'1',
         blower:'2',
@@ -519,7 +534,7 @@ def parse(String description) {
         highSpeed:'7',
         spillway:'8'
         ]
-    
+    */
     def json = msg.json
     
     //process response from toggle commands
@@ -606,15 +621,17 @@ def parse(String description) {
         case "circuit":
               log.info "### parse : circuits ###" 
               def cir = msg.data.get(it)
-              def circuits = msg.data.get(it)                 
-              def spaStatus = circuits[circuit.spa].status
-              def airBlowerStatus = circuits[circuit.blower].status
-              def poolLightStatus = circuits[circuit.poolLight].status
-              def spaLightStatus = circuits[circuit.spaLight].status
-              def cleanerStatus = circuits[circuit.cleaner].status
-              def poolStatus = circuits[circuit.pool].status
-              def highSpeedStatus = circuits[circuit.highSpeed].status
-              def spillwayStatus = circuits[circuit.spillway].status                   
+              def circuits = msg.data.get(it) 
+              log.info "******** circuits = ${circuits} ************"
+              if (!circuits) return
+              def spaStatus = circuits[state.circuit.spa].status
+              def airBlowerStatus = circuits[state.circuit.blower].status
+              def poolLightStatus = circuits[state.circuit.poolLight].status
+              def spaLightStatus = circuits[state.circuit.spaLight].status
+              def cleanerStatus = circuits[state.circuit.cleaner].status
+              def poolStatus = circuits[state.circuit.pool].status
+              def highSpeedStatus = circuits[state.circuit.highSpeed].status
+              def spillwayStatus = circuits[state.circuit.spillway].status                   
            
               log.info "poolLightStatus: ${poolLightStatus}\n, spaLightStatus: ${spaLightStatus}\n, poolStatus: ${poolStatus}\n, spaStatus: ${spaStatus}"
               log.info "cleanerStatus: ${cleanerStatus}\n, spillwayStatus: ${spillwayStatus}\n, blowerStatus: ${airBlowerStatus}\n, highSpeedStatus: ${highSpeedStatus}"
@@ -660,9 +677,9 @@ def parse(String description) {
             
            	def schedule = msg.data.get(it)
             log.info "schedule = ${schedule}"
-            def fullSchedule = "#\t\t\tCircuit\t\t\tStartTime\t\t\tEndTime\n"
+            def fullSchedule = "----- SCHEDULE -----\n\n#\t\t\tCircuit\t\t\tStartTime\t\t\tEndTime\n"
             fullSchedule = fullSchedule + "----------------------------------\n"
-            def eggSchedule = "#\t\tCircuit\t\tDuration\n"
+            def eggSchedule = "----- EGG TIMER -----\n\n#\t\tCircuit\t\tDuration\n"
             eggSchedule = eggSchedule + "-----------------------------------\n"
             //def TAB3 = "\t\t\t"
             //def TAB2 = "\t\t"
@@ -711,7 +728,6 @@ def OnOffconvert(value) {
         return ("ON")
 }
 
-
 def convertDow(dow) {
      switch (dow) {
         case "Sun":
@@ -738,8 +754,6 @@ def convertDow(dow) {
      }    
 }
 
-
-
 def setdatetime() {
 // datetime/set/time/{hour}/{min}/{dow}/{day}/{mon}/{year}/{dst}
 // set the schedule on the controller for the particular schedule ID. 
@@ -751,7 +765,6 @@ def setdatetime() {
 // Day of week (NaN) should be one of: [1,2,4,8,16,32,64] [Sunday->Saturday]dst (0) should be 0 or 1" }
 
     log.debug "In setdatetime"
-    
     
     //def controllerTime = new Date().format("yyyy-MM-dd'T'HH:mm")
     log.debug "controllerTime = ${controllerTime}"
@@ -769,15 +782,14 @@ def setdatetime() {
     String DayOfWeek = newDate.format('EE')
     def downum = convertDow(DayOfWeek)
        
-    log.debug "year = ${year}"
-    log.debug "month = ${month}"
-    log.debug "day = ${day}"
-    log.debug "hour = ${hour}"
-    log.debug "minute = ${minute}"
-    log.debug "dow = ${dow} : ${downum}"
-    log.debug "DayOfWeek = ${DayOfWeek}"
+    //log.debug "year = ${year}"
+    //log.debug "month = ${month}"
+    //log.debug "day = ${day}"
+    //log.debug "hour = ${hour}"
+    //log.debug "minute = ${minute}"
+    //log.debug "dow = ${dow} : ${downum}"
+    //log.debug "DayOfWeek = ${DayOfWeek}"
     def action = setFeature("/datetime/set/time/${hour}/${minute}/date/${downum}/${day}/${month}/${year}/0")
-
     sendHubCommand(action)
 }
 
@@ -795,7 +807,7 @@ def setFeature(query) {
         headers: headers,
         dni
 	)
-    //sendHubCommand(poolAction)
+    
 	return poolAction
 }
 
@@ -912,42 +924,49 @@ def spaModeToggle() {
 def spaToggle() {
     // turns spa heater on/off
 	log.info "Executing 'spaToggle'"
-	setFeature("/circuit/1/toggle/")
+	//setFeature("/circuit/1/toggle/")
+    setFeature("/circuit/${state.circuit['spa']}/toggle/")
 }
 
 def blowerToggle() {
 	log.info "Executing 'blowerToggle'"  
-	setFeature("/circuit/2/toggle/")
+	//setFeature("/circuit/2/toggle/")
+    setFeature("/circuit/${state.circuit['blower']}/toggle/")
 }
 
 def poolLightToggle() {
 	log.info "Executing 'poolLightToggle'"
-	setFeature("/circuit/3/toggle/")
+    setFeature("/circuit/${state.circuit['poolLight']}/toggle/")
 }
 
 def spaLightToggle() {
 	log.info "Executing 'spaLightToogle'"
-	setFeature("/circuit/4/toggle/")
+	//setFeature("/circuit/4/toggle/")
+    setFeature("/circuit/${state.circuit['spaLight']}/toggle/")
 }
 
 def cleanerToggle() {
 	log.info "Executing 'cleanerToogle'"
-	setFeature("/circuit/5/toggle/")
+	//setFeature("/circuit/5/toggle/")
+    setFeature("/circuit/${state.circuit['cleaner']}/toggle/")
 }
 
 def poolToggle() {
 	log.info "Executing 'poolToogle'"
-	setFeature("/circuit/6/toggle/")
+	//setFeature("/circuit/6/toggle/")
+    setFeature("/circuit/${state.circuit['pool']}/toggle/")
 }
 
 def highspeedToggle() {
 	log.info "Executing 'highspeedToggle'"
-	setFeature("/circuit/7/toggle/")
+	//setFeature("/circuit/7/toggle/")
+    setFeature("/circuit/${state.circuit['highSpeed']}/toggle/")
 }
 
 def spillWayToggle() {
 	log.info "Executing 'spillWayToogle'"
-	setFeature("/circuit/8/toggle/")
+	//setFeature("/circuit/8/toggle/")
+    setFeature("/circuit/${state.circuit['spillway']}/toggle/")
 }
 
 // private functions
