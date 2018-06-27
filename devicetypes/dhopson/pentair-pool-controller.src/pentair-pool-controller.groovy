@@ -350,20 +350,19 @@ metadata {
 
 def updated() {
     log.info "######### UPDATED #########"
-    //unsubscribe()
     initialize()
 }
 
 def installed() {
-	log.info "########## In installed ###########"
+	log.info "########## installed ###########"
     initialize()
     setDeviceNetworkId("${controllerIP}","${controllerPort}")
-    sch_dow = []
-    
+    sch_dow = []   
 }
 
 def initialize() {
 	runEvery1Minute(refresh)
+    // modify these functions to match your environment
     state.circuit = [
         spa:'1',
         blower:'2',
@@ -374,6 +373,7 @@ def initialize() {
         highSpeed:'7',
         spillway:'8'
         ]
+     state.systemReady = 0   
 }
 
 def refresh() {
@@ -453,26 +453,9 @@ def calc_dow() {
           calc = calc + dayValueMap[it]
        }   
     }   
-    log.debug "calc = ${calc}"
+    //log.debug "calc = ${calc}"
     
     return (calc)
-}
-
-def get_circuit_num(name) {
-/*
-    def circuit = [
-        spa:'1',
-        blower:'2',
-        poolLight:'3',
-        spaLight:'4',
-        cleaner:'5',
-        pool:'6',
-        highSpeed:'7',
-        spillway:'8'
-        ]
- */       
-    log.debug "get_circuit_num: name = ${name}, number = ${state.circuit[name]}"    
-    return state.circuit[name]
 }
 
 // API calls in server.js file on https://github.com/tagyoureit/nodejs-poolController/blob/b3d31a94daf486058d9a8d8043d9039d3a459487/src/lib/comms/server.js
@@ -481,7 +464,6 @@ def get_circuit_num(name) {
 // curl -X GET http://user:pass@pi-pool:3000/schedule/set/id/7/circuit/3
 def addSchedule() {
     if (!sch_circuit | !sch_id) return
-    //def sch_circuit_num = get_circuit_num(sch_circuit)
     def sch_circuit_num = state.circuit[sch_circuit]
     if (EggTimer) {
        if (!sch_id) return 
@@ -498,8 +480,8 @@ def addSchedule() {
        String sch_startmm = get_minute(startTime)
        String sch_endhh = get_hour(endTime)
        String sch_endmm = get_minute(endTime)
-       log.debug "start time: ${sch_starthh}, ${sch_startmm}"
-       log.debug "end time: ${sch_endhh}, ${sch_endmm}"
+       //log.debug "start time: ${sch_starthh}, ${sch_startmm}"
+       //log.debug "end time: ${sch_endhh}, ${sch_endmm}"
        def sch_dow_num = calc_dow()
         
        // ----- setFeature : query = /schedule/set/7/3/21/00/22/00/127 -------
@@ -507,39 +489,27 @@ def addSchedule() {
        // Response: REST API received request to set circuit on schedule with ID (7) to POOL LIGHT
  
        def scheduleCircuit = setFeature("/schedule/set/id/${sch_id}/circuit/${sch_circuit_num}")
-       log.debug "scheduleCircuit = ${scheduleCircuit}"
-       log.debug "schedule set id:${sch_id} to circuit:${sch_circuit_num}"    
+       //log.debug "scheduleCircuit = ${scheduleCircuit}"
+       //log.debug "schedule set id:${sch_id} to circuit:${sch_circuit_num}"    
        sendHubCommand(scheduleCircuit)
              
        def addschedule = setFeature("/schedule/set/${sch_id}/${sch_circuit_num}/${sch_starthh}/${sch_startmm}/${sch_endhh}/${sch_endmm}/${sch_dow_num}")
-       log.debug "addschedule = ${addschedule}"
+       //log.debug "addschedule = ${addschedule}"
        sendHubCommand(addschedule)
     }
 }
 
 def parse(String description) {
-	log.trace "Parse"
-    log.debug "device = ${device}"
-    log.debug "id = ${device.id} hub = ${device.hub} data = ${device.data}"
+	//log.trace "Parse"
+    //log.debug "device = ${device}"
+    //log.debug "id = ${device.id} hub = ${device.hub} data = ${device.data}"
     def msg = parseLanMessage(description)
-    // version 4 requires pump number be a string, version 3 used integers 
-    /*
-    def circuit = [
-        spa:'1',
-        blower:'2',
-        poolLight:'3',
-        spaLight:'4',
-        cleaner:'5',
-        pool:'6',
-        highSpeed:'7',
-        spillway:'8'
-        ]
-    */
+
     def json = msg.json
     
     //process response from toggle commands
     if (json.text) { 
-              log.warn "Response: ${json.text}"
+              //log.warn "Response: ${json.text}"
               if (json.text.contains("POOL LIGHT")) {       
                   sendEvent(name: "poolLight", value: "${json.status}")
               } else if (json.text.contains("SPA LIGHT")) {
@@ -566,16 +536,16 @@ def parse(String description) {
         //log.info "parse:case switch on : ${it}"
         switch (it) {
         case "time":
-            log.info "### parse : time ###"
+            //log.info "### parse : time ###"
             def time = msg.data.get(it)
-            log.info "time = ${time}"
+            //log.info "time = ${time}"
             def controllerTime = time.controllerTime
             def controllerDate = time.controllerDateStr
             def controllerDoW = time.controllerDayOfWeekStr
             sendEvent(name: "timedate", value: "Time: ${controllerTime}\n Date: ${controllerDate}\n ${controllerDoW}")
             break
         case "heat":  
-            log.info "### parse : heat ###"
+            //log.info "### parse : heat ###"
             def heat = msg.data.get(it)
             def poolSetPoint = heat.poolSetPoint
             def poolHeatMode = heat.poolHeatMode
@@ -584,7 +554,7 @@ def parse(String description) {
             def spaHeatMode = heat.spaHeatMode
             def spaHeatModeStr = heat.spaHeatModeStr
             def heaterActive = heat.heaterActive 
-            log.info "spaSetPoint = ${spaSetPoint}"
+            //log.info "spaSetPoint = ${spaSetPoint}"
             sendEvent(name: "temperature", value: "${spaSetPoint}")
             sendEvent(name: "heatingSetpoint", value: "${spaSetPoint}°")
             sendEvent(name: "spaHeatMode", value: "Spa Heat Mode: ${spaHeatModeStr}\nSpa Set Point: ${spaSetPoint}°")
@@ -592,7 +562,7 @@ def parse(String description) {
             sendEvent(name: "spaMode", value: "${spaHeatModeStr}")
             break
         case "temperature":
-            log.info "### parse : temperatures ###"
+            //log.info "### parse : temperatures ###"
             def temperatures = msg.data.get(it)          
             def poolTemp = temperatures.poolTemp
             def spaTemp = temperatures.spaTemp
@@ -610,8 +580,12 @@ def parse(String description) {
             sendEvent(name: "poolTemp", value: "${poolTemp}")
             sendEvent(name: "spaTemp", value: "${spaTemp}")
             sendEvent(name: "airTemp", value: "${airTemp}")
-            sendEvent(name: "freeze", value: "Freeze Protect:\n${freeze}")
-            log.info "spaSetPoint = ${spaSetPoint}"
+            def ready = "System\n NOT Ready"
+            if (state.systemReady)
+               ready = "System\n Ready"
+            //sendEvent(name: "freeze", value: "Freeze Protect:\n${freeze}\nSys Ready:\n${state.systemReady}")
+            sendEvent(name: "freeze", value: "Freeze Protect:\n${freeze}\n${ready}")
+            //log.info "spaSetPoint = ${spaSetPoint}"
             sendEvent(name: "spaHeatMode", value: "Spa Heat Mode: ${spaHeatModeStr}\nSpa Set Point: ${spaSetPoint}°")
             sendEvent(name: "poolHeatMode", value: "Pool Heat Mode: ${poolHeatModeStr}\nPool Set Point: ${poolSetPoint}°")
             sendEvent(name: "spaMode", value: "${spaHeatModeStr}")
@@ -619,10 +593,10 @@ def parse(String description) {
             sendEvent(name: "temperature", value: "${spaSetPoint}")
             break
         case "circuit":
-              log.info "### parse : circuits ###" 
+              //log.info "### parse : circuits ###" 
               def cir = msg.data.get(it)
               def circuits = msg.data.get(it) 
-              log.info "******** circuits = ${circuits} ************"
+              //log.info "******** circuits = ${circuits} ************"
               if (!circuits) return
               def spaStatus = circuits[state.circuit.spa].status
               def airBlowerStatus = circuits[state.circuit.blower].status
@@ -633,8 +607,8 @@ def parse(String description) {
               def highSpeedStatus = circuits[state.circuit.highSpeed].status
               def spillwayStatus = circuits[state.circuit.spillway].status                   
            
-              log.info "poolLightStatus: ${poolLightStatus}\n, spaLightStatus: ${spaLightStatus}\n, poolStatus: ${poolStatus}\n, spaStatus: ${spaStatus}"
-              log.info "cleanerStatus: ${cleanerStatus}\n, spillwayStatus: ${spillwayStatus}\n, blowerStatus: ${airBlowerStatus}\n, highSpeedStatus: ${highSpeedStatus}"
+              //log.info "poolLightStatus: ${poolLightStatus}\n, spaLightStatus: ${spaLightStatus}\n, poolStatus: ${poolStatus}\n, spaStatus: ${spaStatus}"
+              //log.info "cleanerStatus: ${cleanerStatus}\n, spillwayStatus: ${spillwayStatus}\n, blowerStatus: ${airBlowerStatus}\n, highSpeedStatus: ${highSpeedStatus}"
                        
               sendEvent(name: "poolLight", value: OnOffconvert("${poolLightStatus}"))
               sendEvent(name: "spaLight", value: OnOffconvert("${spaLightStatus}"))
@@ -664,19 +638,42 @@ def parse(String description) {
            ('1'..'2').each {
              //log.info "it =" + it
              def pump = pdata[it]
-             log.info "Pump " + it + " Data -- " + pump            
-             log.info "####### pump: ${pump}"
-             log.info "Pump name = " + pump.name
-             log.info "friendlyName = " + pump.friendlyName
+             //log.info "Pump " + it + " Data -- " + pump            
+             //log.info "####### pump: ${pump}"
+             //log.info "Pump name = " + pump.name
+             //log.info "friendlyName = " + pump.friendlyName
              sendEvent(name: "${pump.name}", value: "${pump.friendlyName}\n---------\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
            } 
+           break
+        case "chlorinator":
+           def chlor = msg.data.get(it)
+           //log.info "chlor = ${chlor}"
+           break
+        case "config":
+           def config = msg.data.get(it)
+           if (config['systemReady'])
+              state.systemReady = 1
+           else
+              state.systemReady = 0
+           break
+        case "UOM":
+           def uom = msg.data.get(it)
+           //log.info "uom = ${uom}"
+           break
+        case "valve":
+           def valve = msg.data.get(it)
+           //log.info "valve = ${valve}"
+           break
+        case "intellichem":
+           def intell = msg.data.get(it)
+           //log.info "intell = ${intell}"
            break
         case "schedule":
         	// This creates a pretty ugly output of schedules and egg timers
            	//log.info "### parse : schedule ##"
             
            	def schedule = msg.data.get(it)
-            log.info "schedule = ${schedule}"
+            //log.info "schedule = ${schedule}"
             def fullSchedule = "----- SCHEDULE -----\n\n#\t\t\tCircuit\t\t\tStartTime\t\t\tEndTime\n"
             fullSchedule = fullSchedule + "----------------------------------\n"
             def eggSchedule = "----- EGG TIMER -----\n\n#\t\tCircuit\t\tDuration\n"
@@ -687,7 +684,7 @@ def parse(String description) {
             def TAB2 = "\t\t"
             for ( i in ["1","2","3","4","5","6","7","8","9","10","11","12"] ) {
            		def event = schedule[i]
-                log.info "event = ${event}"
+                //log.info "event = ${event}"
                 def ID = event.ID
                 def CIRCUIT = event.CIRCUIT
                 def MODE = event.MODE
@@ -764,16 +761,16 @@ def setdatetime() {
 // Received: NaN:NaNDay (NaN) should be 0-31, month (NaN) should be 0-12 and year (NaN) should be 0-99.
 // Day of week (NaN) should be one of: [1,2,4,8,16,32,64] [Sunday->Saturday]dst (0) should be 0 or 1" }
 
-    log.debug "In setdatetime"
+    //log.debug "In setdatetime"
     
     //def controllerTime = new Date().format("yyyy-MM-dd'T'HH:mm")
-    log.debug "controllerTime = ${controllerTime}"
-    log.debug "to string = "+controllerTime.toString()
+    //log.debug "controllerTime = ${controllerTime}"
+    //log.debug "to string = "+controllerTime.toString()
     //def downum = convertDow(dow)
     
     //        controllerTime = 2018-06-18T14:10:24.000-0500
     Date newDate = Date.parse("yyyy-MM-dd'T'HH:mm",controllerTime)  
-    log.debug "newDate = ${newDate}"
+    //log.debug "newDate = ${newDate}"
     String year = newDate.format('yy')
     String month = newDate.format('MM')
     String day = newDate.format('dd')
@@ -808,11 +805,12 @@ def setFeature(query) {
         dni
 	)
     
+    log.debug "poolAction = ${poolAction}"
 	return poolAction
 }
 
-def setSpaHeatPoint(num) {
-	log.debug "setSpaHeatPoint : num = ${num}"
+def setPoint(num) {
+	//log.debug "setSpaHeatPoint : num = ${num}"
     def action = setFeature("/spaheat/setpoint/${num}")
     sendHubCommand(action)
 }
@@ -892,7 +890,7 @@ def spaModeToggle() {
     def mode = device.currentValue("spaMode")
     def num = ""
     def value = ""
-    log.info "mode = ${mode}"    
+    //log.info "mode = ${mode}"    
     switch (mode) {
     	case "Off":
         	num = "1"
@@ -915,8 +913,8 @@ def spaModeToggle() {
             value = "Heater"
     }        
         
-    log.info "new mode = ${value}"
-    log.info "num = ${num}"
+    //log.info "new mode = ${value}"
+    //log.info "num = ${num}"
 	setFeature("/spaheat/mode/${num}")
     sendEvent(name: "spaMode", value: "${value}")
 }
@@ -924,13 +922,11 @@ def spaModeToggle() {
 def spaToggle() {
     // turns spa heater on/off
 	log.info "Executing 'spaToggle'"
-	//setFeature("/circuit/1/toggle/")
     setFeature("/circuit/${state.circuit['spa']}/toggle/")
 }
 
 def blowerToggle() {
 	log.info "Executing 'blowerToggle'"  
-	//setFeature("/circuit/2/toggle/")
     setFeature("/circuit/${state.circuit['blower']}/toggle/")
 }
 
@@ -941,31 +937,26 @@ def poolLightToggle() {
 
 def spaLightToggle() {
 	log.info "Executing 'spaLightToogle'"
-	//setFeature("/circuit/4/toggle/")
     setFeature("/circuit/${state.circuit['spaLight']}/toggle/")
 }
 
 def cleanerToggle() {
 	log.info "Executing 'cleanerToogle'"
-	//setFeature("/circuit/5/toggle/")
     setFeature("/circuit/${state.circuit['cleaner']}/toggle/")
 }
 
 def poolToggle() {
 	log.info "Executing 'poolToogle'"
-	//setFeature("/circuit/6/toggle/")
     setFeature("/circuit/${state.circuit['pool']}/toggle/")
 }
 
 def highspeedToggle() {
 	log.info "Executing 'highspeedToggle'"
-	//setFeature("/circuit/7/toggle/")
     setFeature("/circuit/${state.circuit['highSpeed']}/toggle/")
 }
 
 def spillWayToggle() {
 	log.info "Executing 'spillWayToogle'"
-	//setFeature("/circuit/8/toggle/")
     setFeature("/circuit/${state.circuit['spillway']}/toggle/")
 }
 
