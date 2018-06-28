@@ -63,7 +63,7 @@ iPad layout:
 ## Issues
 Currently this is very specific to my setup.  Manually change the Device Handler to fit your environment.
 
-Change circuit definition in parse function as needed
+Change circuit definition in initialize function as needed
 ```
 circuit = [  
         spa:'1',  
@@ -76,12 +76,5 @@ circuit = [
         spillway:'8'  
         ]
 ```	
-As well as all toggle functions (i.e. spaToggle) 
-```
-def spaToggle() {
-    // turns spa heater on/off
-	log.info "Executing 'spaToggle'"
-	setFeature("/circuit/1/toggle/")
-}
-```
-Modify `/circuit/#` to match your environment
+
+Able to modify eggtimers and schedules by first going into preferences and setting the desired values and then going back to main tile and executing either + schedule or - schedule.  The time can also be changed the same way by activating the time panel.
