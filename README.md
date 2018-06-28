@@ -29,9 +29,10 @@ A Smartthings device designed to interface with a nodejs-poolControlller instanc
 
 iPhone layout:
 
-
-
-
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6354.PNG" height="300"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6355.PNG" height="300">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6356.PNG" height="300"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6357.PNG" height="300">
 
 
 iPad layout:
