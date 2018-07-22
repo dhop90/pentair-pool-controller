@@ -28,7 +28,7 @@ Readme borrowed from [bsileo](https://github.com/bsileo/SmartThings_Pentair)
 A Smartthings device designed to interface with a nodejs-poolControlller instance which is talking on the RS-485 bus to allow viewing and setting pool control options. Single smartthings app to manage the Pool pumps, lights and heater, the spa pump and heater, the chlorinator, and any installed additional "Features". 
 
 # iPhone layout:
-pentair-pool-controller/blob/gh-pages/images/IMG_6511.PNG
+
 <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6507.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6508.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6509.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6510.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6511.PNG" height="400"> 
 
 # Preferences:
