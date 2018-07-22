@@ -29,7 +29,7 @@ A Smartthings device designed to interface with a nodejs-poolControlller instanc
 
 # iPhone layout:
 
-<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6370.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6371.PNG" height="400" ><img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6372.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6373.PNG" height="400">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6507.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6508.PNG" height="400" ><img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6509.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6510.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6511.PNG" height="400">
 
 # Preferences:
 
@@ -38,7 +38,7 @@ A Smartthings device designed to interface with a nodejs-poolControlller instanc
 
 # iPad layout:
 
-<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1088.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1089.PNG" height="300">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1110.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1111.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1112.PNG" height="300"> img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1113.PNG" height="300">
 
 ***
 
