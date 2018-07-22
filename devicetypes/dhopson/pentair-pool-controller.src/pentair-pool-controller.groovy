@@ -41,7 +41,7 @@ metadata {
         command "addSchedule"
         command "delSchedule"
         command "testToggle"
-        command "setuom"
+        //command "setuom"
 	}
    
     preferences {
@@ -116,17 +116,10 @@ metadata {
         	state "Idle", label:'refresh', action:"refresh", icon:"st.secondary.refresh-icon", nextState: "Active", backgroundColor: "#ffffff"
             state "Active", label:'refresh', action:"refresh", icon:"st.secondary.refresh-icon", nextState: "Idle", backgroundColor: "#cccccc"
     	}      
-        //valueTile("timedate", "device.timedate", width: 6, height: 2){ //, decoration: "flat") {
+
         valueTile("timedate", "device.timedate", width: 3, height: 2, decoration: "flat", canChangeBackground: false) {
-			//state "ON", label:'${currentValue}', action:"setdatetime", nextState: "OFF", backgroundColor: "#79b821"
-            //state "OFF", label:'${currentValue}', action:"setdatetime", nextState: "ON", backgroundColor: "#bc2323"
             state "val", label:'${currentValue}', action:"setdatetime", defaultState: true
-		}   
-        
-        standardTile("uomTile", "device.uomTile", width: 3, height: 1, canChangeBackground: false, icon:"st.secondary.refresh-icon") {
-            state "ON", label:'${currentValue}', action:"setuom", defaultState: true, nextState: "OFF"
-            state "OFF", label:'${currentValue}', action:"setuom", defaultState: true, nextState: "ON"
-		}          
+		}           
         
         valueTile("poolCntr", "device.poolCntr", width: 3, height: 2, decoration: "flat", canChangeBackground: false) {
             state "on", label:'${currentValue}', defaultState: true
@@ -275,13 +268,6 @@ metadata {
         valueTile("Pump 2", "device.Pump 2", width: 3, height: 4, decoration: "flat", canChangeBackground: false) {
 			state "val", label:'${currentValue}', defaultState: true
 		}
-        //valueTile("PumpHdr1", "device.PumpHdr1", width: 3, height: 1) {
-		//	state "val", label:'${currentValue}', defaultState: true
-		//}
-        //valueTile("PumpHdr2", "device.PumpHdr2", width: 3, height: 1) {
-		//	state "val", label:'${currentValue}', defaultState: true
-		//}
-
         
         //////////////////////////////////////////////////        
  		multiAttributeTile(name:"thermostatFullspa", type:"thermostat", width:6, height:4) {
@@ -399,8 +385,7 @@ def updated() {
     else
         state.debug_pump = false    
         
-    state.uom = ""    
-        
+    state.uom = ""
     initialize()
 }
 
@@ -425,7 +410,8 @@ def initialize() {
         ]
 
      state.dayValueMap = [Sunday:1,Monday:2,Tuesday:4,Wednesday:8,Thursday:16,Friday:32,Saturday:64,
-                          Sun:1,Mon:2,Tue:4,Wed:8,Thu:16,Fri:32,Sat:64]    
+                          Sun:1,Mon:2,Tue:4,Wed:8,Thu:16,Fri:32,Sat:64] 
+                          
      state.dayMap = ["Sunday":Sunday, 
                      "Monday":Monday, 
                      "Tuesday":Tuesday, 
@@ -433,7 +419,7 @@ def initialize() {
                      "Thursday":Thursday, 
                      "Friday":Friday, 
                      "Saturday":Saturday]
-     state.dayList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+                     
 }
 
 def refresh() {
@@ -444,23 +430,10 @@ def refresh() {
 }
 
 def poll() {
-	// poll gets /all status messages from pool controller (raspberry Pi)
+	// poll gets /all & /device status messages from pool controller (raspberry Pi)
     // this runs every minute
-    def userpass = encodeCredentials(username, password)
-    def headers = getHeader(userpass)
-    
-    def dni = setDeviceNetworkId("${controllerIP}","${controllerPort}")
-
-    def poolAction = new physicalgraph.device.HubAction(
-		method: "GET",
-		path: "/all",
-        headers: headers,
-        dni,
-        query: []
-	)   
-    sendHubCommand(poolAction)
-    def action = setFeature("/device")
-    sendHubCommand(action)
+    sendHubCommand(setFeature("/all"))
+    sendHubCommand(setFeature("/device"))
 }
 
 // schedule 
@@ -479,7 +452,9 @@ def get_minute(time) {
 
 def calc_dow() {      
     def calc = 0
-    state.dayList.each {
+    //state.dayList.each {
+    state.dayMap.keySet().each {
+       log.warn "it = ${it}"
        if (state.dayMap[it]) {        
           calc = calc + state.dayValueMap[it]
        }   
@@ -652,7 +627,6 @@ def parse(String description) {
               def controllerDate = time.controllerDateStr
               def controllerDoW = time.controllerDayOfWeekStr
               sendEvent(name: "timedate", value: "${controllerDoW}\n${controllerDate}\n${controllerTime}\n("+state.uom+")")
-              sendEvent(name: "uomTile", value: state.uom)
               break
         case "heat":  
               if (state.debug) log.info "### parse : heat ###"
@@ -735,8 +709,7 @@ def parse(String description) {
         case "pump":      
               if (state.debug_pump) log.info "### parse : pumps ###"
               def pumps = json.pump
-              pumps.keySet().each {
-              //('1'..'2').each {        
+              pumps.keySet().each {      
                   def pump = pumps[it]
                   if (state.debug_pump) log.debug "pump ${it} = ${pump}"
                   //if (state.debug_pump) log.info "Pump " + it + " Data -- " + pump            
@@ -744,7 +717,7 @@ def parse(String description) {
                   if (state.debug_pump) log.info "friendlyName = " + pump.friendlyName
                   //sendEvent(name: "PumpHdr${it}", value: "${pump.friendlyName} Pump")
                   sendEvent(name: "${pump.name}", value: "${pump.friendlyName}\n---Pump---\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
-                                                   //sendEvent(name: "${pump.name}", value: "Watts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
+                //sendEvent(name: "${pump.name}", value: "Watts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
               } 
               break
         case "chlorinator":
@@ -772,9 +745,11 @@ def parse(String description) {
         case "schedule":
            	  if (state.debug) log.info "### parse : schedule ##"
               def schedule = json.schedule
+              
               def fullSchedule = "----- SCHEDULE -----\n"
               fullSchedule = fullSchedule + "#      Circuit     StartTime     EndTime\n"      
               fullSchedule = fullSchedule + "____________________________________\n"
+              
               def eggSchedule = "----- EGG TIMER -----\n"
               eggSchedule = eggSchedule + "   #         Circuit        Duration\n"
               eggSchedule = eggSchedule +   "____________________________________\n"  
@@ -837,7 +812,6 @@ def OnOffconvert(value) {
 }
 
 def setFeature(query) {
-    //log.debug "----- setFeature : query = ${query} -------"
     def userpass = encodeCredentials(username, password)
     def headers = getHeader(userpass)
     def dni = setDeviceNetworkId("${controllerIP}","${controllerPort}")
@@ -849,7 +823,7 @@ def setFeature(query) {
         dni
 	)
     
-    log.info "poolAction = ${poolAction}"
+    log.info "setFeature : poolAction =\n${poolAction}"
 	return poolAction
 }
 
@@ -868,19 +842,19 @@ def alterSetpoint(targetValue) {
 }
 
 def setSpaHeatPoint(value) {
-    def action = setFeature("/spaheat/setpoint/${value}")
-    sendHubCommand(action)
+    //def action = setFeature("/spaheat/setpoint/${value}")
+    sendHubCommand(setFeature("/spaheat/setpoint/${value}"))
 }
 // commands
 
-def setuom() {
-    log.debug "setuom"
-}
+//def setuom() {
+//    log.debug "setuom"
+//}
 
 def setPoint(num) {
 	log.debug "setSpaHeatPoint : num = ${num}"
-    def action = setFeature("/spaheat/setpoint/${num}")
-    sendHubCommand(action)
+    //def action = setFeature("/spaheat/setpoint/${num}")
+    sendHubCommand(setFeature("/spaheat/setpoint/${num}"))
 }
 
 def tempUp() {
@@ -966,64 +940,64 @@ def spaModeToggle() {
         
     //log.info "new mode = ${value}"
     //log.info "num = ${num}"
-	def action = setFeature("/spaheat/mode/${num}")
+	//def action = setFeature("/spaheat/mode/${num}")
+    sendHubCommand(setFeature("/spaheat/mode/${num}"))
     sendEvent(name: "spaMode", value: "${value}")
-    sendHubCommand(action)
 }
 
 def testToggle() {
     //log.error "TEST"
-    def action = setFeature("/device")
-    sendHubCommand(action)
+    //def action = setFeature("/device")
+    sendHubCommand(setFeature("/device"))
 }
 
 def spaToggle() {
     // turns spa heater on/off
 	log.error "Executing 'spaToggle'"
-    def action = setFeature("/circuit/${state.circuit['spa']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['spa']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['spa']}/toggle/"))
 }
 
 def blowerToggle() {
 	log.error "Executing 'blowerToggle'"  
-    def action = setFeature("/circuit/${state.circuit['blower']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['blower']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['blower']}/toggle/"))
 }
 
 def poolLightToggle() {
 	log.error "Executing 'poolLightToggle'"
-    def action = setFeature("/circuit/${state.circuit['poolLight']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['poolLight']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['poolLight']}/toggle/"))
 }
 
 def spaLightToggle() {
 	log.error "Executing 'spaLightToogle'"
-    def action = setFeature("/circuit/${state.circuit['spaLight']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['spaLight']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['spaLight']}/toggle/"))
 }
 
 def cleanerToggle() {
 	log.error "Executing 'cleanerToogle'"
-    def action = setFeature("/circuit/${state.circuit['cleaner']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['cleaner']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['cleaner']}/toggle/"))
 }
 
 def poolToggle() {
 	log.error "Executing 'poolToogle'"
-    def action = setFeature("/circuit/${state.circuit['pool']}/toggle/")
-    sendHubCommand(action)
+   // def action = setFeature("/circuit/${state.circuit['pool']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['pool']}/toggle/"))
 }
 
 def highspeedToggle() {
 	log.error "Executing 'highspeedToggle'"
-    def action = setFeature("/circuit/${state.circuit['highSpeed']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['highSpeed']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['highSpeed']}/toggle/"))
 }
 
 def spillWayToggle() {
 	log.error "Executing 'spillWayToogle'"
-    def action = setFeature("/circuit/${state.circuit['spillway']}/toggle/")
-    sendHubCommand(action)
+    //def action = setFeature("/circuit/${state.circuit['spillway']}/toggle/")
+    sendHubCommand(setFeature("/circuit/${state.circuit['spillway']}/toggle/"))
 }
 
 // private functions
