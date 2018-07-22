@@ -41,6 +41,7 @@ metadata {
         command "addSchedule"
         command "delSchedule"
         command "testToggle"
+        command "setuom"
 	}
    
     preferences {
@@ -121,6 +122,11 @@ metadata {
             //state "OFF", label:'${currentValue}', action:"setdatetime", nextState: "ON", backgroundColor: "#bc2323"
             state "val", label:'${currentValue}', action:"setdatetime", defaultState: true
 		}   
+        
+        standardTile("uomTile", "device.uomTile", width: 3, height: 1, canChangeBackground: false, icon:"st.secondary.refresh-icon") {
+            state "ON", label:'${currentValue}', action:"setuom", defaultState: true, nextState: "OFF"
+            state "OFF", label:'${currentValue}', action:"setuom", defaultState: true, nextState: "ON"
+		}          
         
         valueTile("poolCntr", "device.poolCntr", width: 3, height: 2, decoration: "flat", canChangeBackground: false) {
             state "on", label:'${currentValue}', defaultState: true
@@ -393,6 +399,8 @@ def updated() {
     else
         state.debug_pump = false    
         
+    state.uom = ""    
+        
     initialize()
 }
 
@@ -579,7 +587,8 @@ def parse(String description) {
     def msg = parseLanMessage(description)
 
     def xmlerror = msg.xmlError
-    //log.debug "xmlerror = ${xmlerror}"
+    if (xmlerror)
+       log.debug "Error: ${xmlerror}"
           
     if (msg.xml) {
         def body = new XmlSlurper().parseText(msg.body)
@@ -587,16 +596,16 @@ def parse(String description) {
         def verMinor = body.specVersion.minor
         def verPatch = body.specVersion.patch
         def name = body.device.friendlyName
-
-		//log.warn "verMajor = ${verMajor}"
-        //log.warn "verMinor = ${verMinor}"
-        sendEvent(name: "poolCntr", value: "${name} Version ${verMajor}.${verMinor}.${verPatch}")
+        sendEvent(name: "poolCntr", value: "${name} Version\n${verMajor}.${verMinor}.${verPatch}")
         return null
     }    
 
     def json = msg.data
     //log.warn "json = ${json}"
- 
+    
+    if (!json)
+        return null
+        
     def keys = json.keySet()
     keys.each() {
       def key = it
@@ -642,7 +651,8 @@ def parse(String description) {
               def controllerTime = time.controllerTime
               def controllerDate = time.controllerDateStr
               def controllerDoW = time.controllerDayOfWeekStr
-              sendEvent(name: "timedate", value: "${controllerDoW}\n${controllerDate}\n${controllerTime}")
+              sendEvent(name: "timedate", value: "${controllerDoW}\n${controllerDate}\n${controllerTime}\n("+state.uom+")")
+              sendEvent(name: "uomTile", value: state.uom)
               break
         case "heat":  
               if (state.debug) log.info "### parse : heat ###"
@@ -748,8 +758,8 @@ def parse(String description) {
               sendEvent(name: "config", value: "${state}")
               break
         case "UOM":
-              def uom = json.UOM
-              //log.info "uom = ${uom}"
+              state.uom = json.UOM.UOMStr
+              //log.info "uom = ${state.uom}"
               break
         case "valve":
               def valve = json.valve
@@ -762,7 +772,6 @@ def parse(String description) {
         case "schedule":
            	  if (state.debug) log.info "### parse : schedule ##"
               def schedule = json.schedule
-              if (state.debug) log.warn "schedule = ${schedule}"
               def fullSchedule = "----- SCHEDULE -----\n"
               fullSchedule = fullSchedule + "#      Circuit     StartTime     EndTime\n"      
               fullSchedule = fullSchedule + "____________________________________\n"
@@ -772,15 +781,16 @@ def parse(String description) {
             
               def int circuitSize = 0
               def space = ""
-           
-              for ( i in ["1","2","3","4","5","6","7","8","9","10","11","12"] ) {
+              def int i
+              
+              schedule.keySet().each {
                   space = ""
-           		  def event = schedule[i]
-                  if (state.debug) log.warn "event = ${event}"
+                  def event = schedule[it]
                   def ID = event.ID
                   def CIRCUIT = event.CIRCUIT
                   def MODE = event.MODE
                   if (MODE == "Egg Timer") {
+                      //log.warn "Event is an Egg Timer"
                       def DURATION = event.DURATION
                       circuitSize = 16 - CIRCUIT.size()
                       for (i = 0; i <circuitSize; i++) {
@@ -788,7 +798,7 @@ def parse(String description) {
                       }
                       eggSchedule = eggSchedule + "${ID}${space}${CIRCUIT}${space}${DURATION}\n"
                   } else if (CIRCUIT != "NOT USED") {
-                      //circuitSize = 22 - CIRCUIT.size()
+                      //log.warn "Event is a Schedule"
                       circuitSize = 16 - CIRCUIT.size()
                       for (i = 0; i <circuitSize; i++) {
                       	 space = space + " "
@@ -839,7 +849,7 @@ def setFeature(query) {
         dni
 	)
     
-    //log.error "poolAction = ${poolAction}"
+    log.info "poolAction = ${poolAction}"
 	return poolAction
 }
 
@@ -862,6 +872,10 @@ def setSpaHeatPoint(value) {
     sendHubCommand(action)
 }
 // commands
+
+def setuom() {
+    log.debug "setuom"
+}
 
 def setPoint(num) {
 	log.debug "setSpaHeatPoint : num = ${num}"
@@ -1022,7 +1036,6 @@ private setDeviceNetworkId(ip,port){
       def iphex = convertIPtoHex(ip)
       def porthex = convertPortToHex(port)
       device.deviceNetworkId = "$iphex:$porthex"
-      //log.debug "Device Network Id set to ${iphex}:${porthex}"
       return (device.deviceNetworkId)
 }
 
