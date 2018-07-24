@@ -25,7 +25,6 @@ metadata {
         capability "Temperature Measurement"
         capability "Thermostat"
        
-        // modify these functions to match your environment
         command "poolToggle"
         command "spaToggle"
         command "spaModeToggle"
@@ -40,14 +39,14 @@ metadata {
         command "setdatetime"
         command "addSchedule"
         command "delSchedule"
-        command "testToggle"
+        command "displayCntr"
         //command "setuom"
 	}
    
     preferences {
        	section("Select your controller") {
-       		input "controllerIP", "text", title: "Controller hostname/IP", required: true
-       		input "controllerPort", "port", title: "Controller port", required: true, defaultValue: "3000"
+       		input "controllerIP", "text", title: "Controller hostname/IP", required: true, displayDuringSetup: true
+       		input "controllerPort", "port", title: "Controller port", required: true, defaultValue: "3000", displayDuringSetup: true
             input "username", "string", title:"Username", description: "username", required: true, displayDuringSetup: true
             input "password", "password", title:"Password", description: "Password", required: true, displayDuringSetup: true
             input name: "debug", type: "bool", title: "Enable debug?", description: "Debug", required: false
@@ -58,14 +57,14 @@ metadata {
             input name: "controllerTime", type: "time", title: "System Time", descripiton: "Enter Time, then select time tile to update", required: false
             input name: "EggTimer", type: "bool", title: "Is this an egg timer?", description: "Egg timer and not a Schedule?", required: false
             input name: "sch_circuit", type: "enum", title: "Circuit Name", description: "Which circuit should be used for this schedule", required: false, options:[
-                    "spa",
-        			"blower",
-        			"poolLight",
-        			"spaLight",
-        			"cleaner",
-        			"pool",
-        			"highSpeed",
-        			"spillway"]
+                    "SPA",
+        			"AIR BLOWER",
+        			"POOL LIGHT",
+        			"SPA LIGHT",
+        			"CLEANER",
+        			"POOL",
+        			"HIGH SPEED",
+        			"SPILLWAY"]
             input name: "sch_id", type: "enum", title: "Schedule ID", description: "ID is used for both schedule/eggtimer addition and deletion", required: false, options:[
                     "1",
         			"2",
@@ -82,25 +81,14 @@ metadata {
             input name: "egg_hour", type: "number", title: "Egg timer hour", description: "Number of hours for egg timer", range: "0..12", required: false
             input name: "egg_min", type: "number", title: "Egg timer min", description: "Number of minutes for egg timer", range: "0..59", required: false        
             input name: "sch_start", type: "time", title: "Schedule Start Time", descripiton: "Start Time for schedule", required: false
-            input name: "sch_end",   type: "time", title: "Schedule End Time",   descripiton: "End Time for schedule",   required: false            
-            /*
-            input name: "sch_dow", type: "enum", title: "Schedule Day of Week", description: "Day of Week", required: false, multiple: true, refreshAfterSelection:true, options:[
-                    "Monday", 
-                    "Tuesday", 
-                    "Wednesday", 
-                    "Thursday", 
-                    "Friday", 
-                    "Saturday", 
-                    "Sunday"]
-                    //https://community.smartthings.com/t/input-preferences-for-device-type-with-multiple-true/15330 - issue   
-             */       
-             input name: "Monday", type: "bool", title: "Schedule Monday?", description: "Should the task be scheduled for this day?", required: false 
-             input name: "Tuesday", type: "bool", title: "Schedule Tuesday?", description: "Should the task be scheduled for this day?", required: false
-             input name: "Wednesday", type: "bool", title: "Schedule Wednesday?", description: "Should the task be scheduled for this day?", required: false
-             input name: "Thursday", type: "bool", title: "Schedule Thursday?", description: "Should the task be scheduled for this day?", required: false
-             input name: "Friday", type: "bool", title: "Schedule Friday?", description: "Should the task be scheduled for this day?", required: false
-             input name: "Saturday", type: "bool", title: "Schedule Saturday?", description: "Should the task be scheduled for this day?", required: false
-             input name: "Sunday", type: "bool", title: "Schedule Sunday?", description: "Should the task be scheduled for this day?", required: false 
+            input name: "sch_end",   type: "time", title: "Schedule End Time",   descripiton: "End Time for schedule",   required: false             
+            input name: "Monday", type: "bool", title: "Schedule Monday?", description: "Should the task be scheduled for this day?", required: false 
+            input name: "Tuesday", type: "bool", title: "Schedule Tuesday?", description: "Should the task be scheduled for this day?", required: false
+            input name: "Wednesday", type: "bool", title: "Schedule Wednesday?", description: "Should the task be scheduled for this day?", required: false
+            input name: "Thursday", type: "bool", title: "Schedule Thursday?", description: "Should the task be scheduled for this day?", required: false
+            input name: "Friday", type: "bool", title: "Schedule Friday?", description: "Should the task be scheduled for this day?", required: false
+            input name: "Saturday", type: "bool", title: "Schedule Saturday?", description: "Should the task be scheduled for this day?", required: false
+            input name: "Sunday", type: "bool", title: "Schedule Sunday?", description: "Should the task be scheduled for this day?", required: false 
         }
       }  
     
@@ -109,9 +97,7 @@ metadata {
 	}
     
 	tiles(scale: 2) {
-    	// Display time and date from pool controller
-        
-        // refresh
+
         standardTile("refresh", "device.refresh", width: 2, height: 2, canChangeBackground: true) {
         	state "Idle", label:'refresh', action:"refresh", icon:"st.secondary.refresh-icon", nextState: "Active", backgroundColor: "#ffffff"
             state "Active", label:'refresh', action:"refresh", icon:"st.secondary.refresh-icon", nextState: "Idle", backgroundColor: "#cccccc"
@@ -122,17 +108,18 @@ metadata {
 		}           
         
         valueTile("poolCntr", "device.poolCntr", width: 3, height: 2, decoration: "flat", canChangeBackground: false) {
-            state "on", label:'${currentValue}', defaultState: true
+            state "on", label:'${currentValue}', defaultState: true, nextState: "off", action:"displayCntr"
+            state "off", label:'${currentValue}', defaultState: false, nextState: "on", action:"displayCntr"
         }    
         
         standardTile("freeze", "device.freeze", width:2, height: 2) {
-        	state "ON", label:'Freeze:${currentValue}', defaultState: true, nextState: "ON", backgroundColor: "#bc2323", icon: "st.Weather.weather2"
-            state "OFF", label:'Freeze:${currentValue}', defaultState: true, nextState: "OFF", backgroundColor: "#79b821", icon: "st.Weather.weather2"
+        	state "on", label:'Freeze:${currentValue}', defaultState: true, nextState: "on", backgroundColor: "#bc2323", icon: "st.Weather.weather2"
+            state "off", label:'Freeze:${currentValue}', defaultState: true, nextState: "off", backgroundColor: "#79b821", icon: "st.Weather.weather2"
         }
         
         standardTile("config", "device.config", width:2, height: 2) {
-        	state "ON", label:'Ready', defaultState: true, nextState: "OFF", backgroundColor: "#79b821", icon: "st.Health & Wellness.health2"
-            state "OFF", label:'Not Ready', defaultState: true, nextState: "ON", backgroundColor: "#bc2323", icon: "st.Health & Wellness.health2"
+        	state "on", label:'Ready', defaultState: true, nextState: "off", backgroundColor: "#79b821", icon: "st.Health & Wellness.health2"
+            state "off", label:'Not Ready', defaultState: true, nextState: "on", backgroundColor: "#bc2323", icon: "st.Health & Wellness.health2"
         }
         
         //////////////////////////////////////////////////
@@ -183,67 +170,68 @@ metadata {
             ])
     	}
         
-        standardTile("test", "device.test", width: 2, height: 2, canChangeBackground: true) {
-			//state "unknown", label: 'poolLight', action: "poolLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
-            state "off", label: 'test ${currentValue}', action: "testToggle", nextState: "on"
-			state "on", label: 'test ${currentValue}', action: "testToggle", nextState: "off"
-		}
         
         //////////////////////////////////////////////////
         
-        standardTile("poolLight", "device.poolLight", width: 2, height: 2, canChangeBackground: true) {
-			state "unknown", label: 'poolLight', action: "poolLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
-            state "off", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'poolLight ${currentValue}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
+        standardTile("POOL LIGHT", "device.POOL LIGHT", width: 2, height: 2, canChangeBackground: true) {
+			state "unknown", label: 'POOL LIGHT', action: "poolLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
+            state "off", label: 'POOL LIGHT ${name}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'POOL LIGHT ${name}', action: "poolLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
 		}
-        standardTile("spaLight", "device.spaLight",   width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'spaLight', action: "spaLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
-			state "off", label: 'spaLight ${currentValue}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'spaLight ${currentValue}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
+        standardTile("SPA LIGHT", "device.SPA LIGHT",   width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'SPA LIGHT', action: "spaLightUnknown", icon: "st.Lighting.light11", backgroundColor: "#F2F200"
+			state "off", label: 'SPA LIGHT ${name}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'SPA LIGHT ${name}', action: "spaLightToggle", icon: "st.Lighting.light11", backgroundColor: "#79b821", nextState: "off"
 		}
-        standardTile("highspeed", "device.highspeed", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'Highspeed', action: "highspeedUnknown", icon: "st.thermostat.thermostat-right", backgroundColor: "#F2F200"
-			state "off", label: 'Highspeed ${currentValue}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'Highspeed ${currentValue}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#79b821", nextState: "off"
+        standardTile("HIGH SPEED", "device.HIGH SPEED", width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'HIGH SPEED', action: "highspeedUnknown", icon: "st.thermostat.thermostat-right", backgroundColor: "#F2F200"
+			state "off", label: 'HIGH SPEED ${name}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'HIGH SPEED ${name}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#79b821", nextState: "off"
 		}
  
         //////////////////////////////////////////////////
-        standardTile("cleaner", "device.cleaner", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'Cleaner', action: "cleanerUnknown", icon: "st.Appliances.appliances2", backgroundColor: "#F2F200"
-			state "off", label: 'Cleaner ${currentValue}', action: "cleanerToggle", icon: "st.Appliances.appliances2", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'Cleaner ${currentValue}', action: "cleanerToggle", icon: "st.Appliances.appliances2", backgroundColor: "#79b821", nextState: "off"
+        standardTile("CLEANER", "device.CLEANER", width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'CLEANER', action: "cleanerUnknown", icon: "st.Appliances.appliances2", backgroundColor: "#F2F200"
+			state "off", label: 'CLEANER ${name}', action: "cleanerToggle", icon: "st.Appliances.appliances2", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'CLEANER ${name}', action: "cleanerToggle", icon: "st.Appliances.appliances2", backgroundColor: "#79b821", nextState: "off"
 		}
-        standardTile("spillWay", "device.spillWay", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'SpillWay', action: "spillWayUnknown", icon: "st.Bath.bath13", backgroundColor: "#F2F200"
-			state "off", label: 'SpillWay ${currentValue}', action: "spillWayToggle", icon: "st.Bath.bath13", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'SpillWay ${currentValue}', action: "spillWayToggle", icon: "st.Bath.bath13", backgroundColor: "#79b821", nextState: "off"
+        standardTile("SPILLWAY", "device.SPILLWAY", width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'SPILLWAY', action: "spillWayUnknown", icon: "st.Bath.bath13", backgroundColor: "#F2F200"
+			state "off", label: 'SPILLWAY ${name}', action: "spillWayToggle", icon: "st.Bath.bath13", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'SPILLWAY ${name}', action: "spillWayToggle", icon: "st.Bath.bath13", backgroundColor: "#79b821", nextState: "off"
 		}
-        standardTile("blower", "device.blower", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'blower', action: "blowerUnknown", icon: "st.vents.vent", backgroundColor: "#F2F200"
-			state "off", label: 'blower ${currentValue}', action: "blowerToggle", icon: "st.vents.vent", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'blower ${currentValue}', action: "blowerToggle", icon: "st.vents.vent-open", backgroundColor: "#79b821", nextState: "off"
+        standardTile("AIR BLOWER", "device.AIR BLOWER", width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'AIR BLOWER', action: "blowerUnknown", icon: "st.vents.vent", backgroundColor: "#F2F200"
+			state "off", label: 'AIR BLOWER ${name}', action: "blowerToggle", icon: "st.vents.vent", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'AIR BLOWER ${name}', action: "blowerToggle", icon: "st.vents.vent-open", backgroundColor: "#79b821", nextState: "off"
 		}
      
+        // Runs Pool filter
+        standardTile("POOL", "device.POOL", width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'POOL', action: "poolUnknown", icon: "st.Health & Wellness.health2", backgroundColor: "#F2F200"
+			state "off", label: 'Filter ${name}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#ffffff", nextState: "on"
+			state "on", label: 'Filter ${name}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#79b821", nextState: "off"
+		}
         //////////////////////////////////////////////////
         // HeatingSetpoint
  		// Turns Spa heat on/off
         // Can use thermostatFull to change heater set point
+        standardTile("SPA", "device.SPA", width: 2, height: 2, canChangeBackground: true) {
+        	state "unknown", label: 'SPA', action: "spaUnknown", icon: "st.Bath.bath4", backgroundColor: "#F2F200"
+			state "off", label: 'SPA ${name}', action: "spaToggle", backgroundColor: "#ffffff", nextState: "on", icon: "st.Bath.bath4" //,icon: "st.thermostat.heat"
+			state "on", label: 'SPA ${name}', action: "spaToggle", backgroundColor: "#79b821", nextState: "off", icon: "st.Bath.bath4" //,icon: "st.thermostat.heating"
+        }
         
         standardTile("spaDown", "device.spaDown", width: 2, height: 2, canChangeBackground: true) {
 			state "down", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "push", backgroundColor: "#ffffff"
   			state "push", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "down", backgroundColor: "#cccccc"           
 		}
+        
         standardTile("heatingSetpoint", "device.heatingSetpoint", width: 2, height: 2, canChangeBackground: true, key: "HEATING_SETPOINT") {
 			 state "off", label: '${name}: ${currentValue}', action: "spaToggle", unit: "dF", icon: "st.Bath.bath4", backgroundColor: "#ffffff", nextState: "on"
 			 state "on" , label: '${name}: ${currentValue}', action: "spaToggle", unit: "dF", icon: "st.Bath.bath4", backgroundColor: "#79b821", nextState: "off"
 		}
-        
-        standardTile("spa", "device.spa", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'Spa', action: "spaUnknown", icon: "st.Bath.bath4", backgroundColor: "#F2F200"
-			state "off", label: 'Spa ${currentValue}', action: "spaToggle", backgroundColor: "#ffffff", nextState: "on", icon: "st.Bath.bath4" //,icon: "st.thermostat.heat"
-			state "on", label: 'Spa ${currentValue}', action: "spaToggle", backgroundColor: "#79b821", nextState: "off", icon: "st.Bath.bath4" //,icon: "st.thermostat.heating"
-        }
-   
+          
         standardTile("spaUp", "device.spaUp", width: 2, height: 2, canChangeBackground: true) {
 			state "up", label: 'Up', action: "tempUp",icon: "st.thermostat.thermostat-up",nextState: "push", backgroundColor: "#ffffff"
 			state "push", label: 'Up', action: "tempUp",icon: "st.thermostat.thermostat-up",nextState: "up", backgroundColor: "#cccccc"
@@ -251,11 +239,6 @@ metadata {
         
         //////////////////////////////////////////////////
         
-        standardTile("pool", "device.pool", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'Pool', action: "poolUnknown", icon: "st.Health & Wellness.health2", backgroundColor: "#F2F200"
-			state "off", label: 'Filter ${currentValue}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'Filter ${currentValue}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#79b821", nextState: "off"
-		}
         valueTile("blank", "device.blank", width: 2, height: 2) {
 			state "blank", label:'', defaultState: true
 		}     
@@ -304,11 +287,11 @@ metadata {
   
         //////////////////////////////////////////////////  
         valueTile("Schedule", "device.Schedule", width: 6, height: 10, decoration: "flat", canChangeBackground: false) {
-			state "val", label:'${currentValue}', defaultState: false
+			state "Schedule", label:'${currentValue}', defaultState: false
 		}
         //valueTile("EggTimer", "device.EggTimer", width: 6, height: 4, type:"generic", decoration: "flat") {
         valueTile("EggTimer", "device.EggTimer", width: 6, height: 5, decoration: "flat", canChangeBackground: false) {
-			state "val", label:'${currentValue}', defaultState: true
+			state "EggTimer", label:'${currentValue}', defaultState: true
 		}  
 
         //////////////////////////////////////////////////  
@@ -325,12 +308,7 @@ metadata {
 			state "Solar Only", label: '${name}', action: "spaModeToggle", backgroundColor: "#ffffff", nextState: "Off"
 		}    
         
-        // Run Pool filter
-        standardTile("pool", "device.pool", width: 2, height: 2, canChangeBackground: true) {
-        	state "unknown", label: 'Pool', action: "poolUnknown", icon: "st.Health & Wellness.health2", backgroundColor: "#F2F200"
-			state "off", label: 'Filter ${currentValue}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#ffffff", nextState: "on"
-			state "on", label: 'Filter ${currentValue}', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#79b821", nextState: "off"
-		}
+        // Runs Pool filter
                   
         standardTile("poolUp", "device.poolUp", width: 2, height: 2) {
 			state "up", label: 'Up', action: "tempUp", backgroundColor: "#ffffff",icon: "st.thermostat.thermostat-up"
@@ -355,14 +333,14 @@ metadata {
         main(["poolTemp"])
 
         details([
-        "timedate", "poolCntr",
+        "poolCntr", "timedate",
         "refresh", "config", "freeze", 
         //"poolHeatMode", "spaHeatMode",
         "airTemp", "poolTemp", "spaTemp",
-        "poolLight", "spaLight", "highspeed", 
-        "cleaner", "spillWay", "blower", 
-        "spaDown","spa","spaUp",
-        "pool","setschedule", "delschedule",
+        "POOL LIGHT", "SPA LIGHT", "HIGH SPEED", 
+        "CLEANER", "SPILLWAY", "AIR BLOWER", 
+        "spaDown","SPA","spaUp",
+        "POOL","setschedule", "delschedule",
         "thermostatFullspa",
         "poolHeatMode", "spaHeatMode",
         //"PumpHdr1","PumpHdr2",
@@ -375,17 +353,11 @@ metadata {
             
 def updated() {
     if (state.debug) log.info "######### UPDATED #########" 
-    if (debug) 
-        state.debug = true
-    else
-        state.debug = false
-        
-    if (debug_pump) 
-        state.debug_pump = true
-    else
-        state.debug_pump = false    
-        
+    state.debug = debug
+    state.debug_pump = debug_pump
+    
     state.uom = ""
+    state.Cntr = true
     initialize()
 }
 
@@ -397,36 +369,27 @@ def installed() {
 
 def initialize() {
 	runEvery1Minute(refresh)
-    // modify these functions to match your environment
-    state.circuit = [
-        spa:'1',
-        blower:'2',
-        poolLight:'3',
-        spaLight:'4',
-        cleaner:'5',
-        pool:'6',
-        highSpeed:'7',
-        spillway:'8'
-        ]
 
-     state.dayValueMap = [Sunday:1,Monday:2,Tuesday:4,Wednesday:8,Thursday:16,Friday:32,Saturday:64,
+    state.circuit = [spa:1] // can't have an empty map, will be deleted once circuits are discovered
+    sendHubCommand(setFeature("/circuit"))
+    
+    state.dayValueMap = [Sunday:1,Monday:2,Tuesday:4,Wednesday:8,Thursday:16,Friday:32,Saturday:64,
                           Sun:1,Mon:2,Tue:4,Wed:8,Thu:16,Fri:32,Sat:64] 
                           
-     state.dayMap = ["Sunday":Sunday, 
+    state.dayMap = ["Sunday":Sunday, 
                      "Monday":Monday, 
                      "Tuesday":Tuesday, 
                      "Wednesday":Wednesday, 
                      "Thursday":Thursday, 
                      "Friday":Friday, 
-                     "Saturday":Saturday]
-                     
+                     "Saturday":Saturday]                    
 }
 
 def refresh() {
     if (state.debug) log.warn "Requested a refresh"
     poll()
-    sendEvent(name: "refresh", isStateChange: "true")
-    sendEvent(name: "config", value:"OFF");
+    sendEvent(name: "refresh", isStateChange: "true", value: "refresh")
+    sendEvent(name: "config", value:"off");
 }
 
 def poll() {
@@ -439,14 +402,10 @@ def poll() {
 // schedule 
 
 def get_hour(time) {
-   //String hour = time.format('HH')
-   //return hour
    return time.format('HH')
 }
 
 def get_minute(time) {
-   //String minute = time.format('mm')
-   //return minute
    return time.format('mm')
 }
 
@@ -473,8 +432,6 @@ def addSchedule() {
     def sch_circuit_num = state.circuit[sch_circuit]
     if (EggTimer) {
        def addeggtimer = setFeature("/eggtimer/set/id/${sch_id}/circuit/${sch_circuit_num}/hour/${egg_hour}/min/${egg_min}")
-       // "/circuit/${state.circuit['spa']}/toggle/"
-       //def addeggtimer = setFeature("/eggtimer/set/id/${sch_id}/circuit/${state.circuit[${sch_circuit}]}/hour/${egg_hour}/min/${egg_min}")
        sendHubCommand(addeggtimer)
     } else {
        if (!sch_start | !sch_end) return
@@ -522,15 +479,6 @@ def setdatetime() {
 //"text": "FAIL: SOCKET API - hour (NaN) should be 0-23 and minute (NaN) should be 0-59. 
 // Received: NaN:NaNDay (NaN) should be 0-31, month (NaN) should be 0-12 and year (NaN) should be 0-99.
 // Day of week (NaN) should be one of: [1,2,4,8,16,32,64] [Sunday->Saturday]dst (0) should be 0 or 1" }
-
-    //log.debug "In setdatetime"
-    
-    //def controllerTime = new Date().format("yyyy-MM-dd'T'HH:mm")
-    //log.debug "controllerTime = ${controllerTime}"
-    //log.debug "to string = "+controllerTime.toString()
-    //def downum = convertDow(dow)
-    
-    //        controllerTime = 2018-06-18T14:10:24.000-0500
     if (!controllerTime) return
     Date newDate = Date.parse("yyyy-MM-dd'T'HH:mm",controllerTime)  
     //log.debug "newDate = ${newDate}"
@@ -542,15 +490,6 @@ def setdatetime() {
     String DayOfWeek = newDate.format('EE')
     //log.info "state.dayValueMap = ${state.dayValueMap}, DayOfWeek = ${DayOfWeek}"
     def downum = state.dayValueMap[DayOfWeek]
-    //def downum = convertDow(DayOfWeek)
-       
-    //log.debug "year = ${year}"
-    //log.debug "month = ${month}"
-    //log.debug "day = ${day}"
-    //log.debug "hour = ${hour}"
-    //log.debug "minute = ${minute}"
-    //log.debug "dow = ${dow} : ${downum}"
-    //log.debug "DayOfWeek = ${DayOfWeek}"
     def action = setFeature("/datetime/set/time/${hour}/${minute}/date/${downum}/${day}/${month}/${year}/0")
     sendHubCommand(action)
 }
@@ -558,31 +497,44 @@ def setdatetime() {
 // parse
 
 def parse(String description) {
-	log.debug "############ Parse #############"
+	if (state.debug) log.debug "############ Parse #############"
     def msg = parseLanMessage(description)
 
     def xmlerror = msg.xmlError
-    if (xmlerror)
+    if (xmlerror) {
        log.debug "Error: ${xmlerror}"
-          
+       return null
+    }   
+    
+    // process xml response from /device
+    // stop processing when done via return null
     if (msg.xml) {
         def body = new XmlSlurper().parseText(msg.body)
         def verMajor = body.specVersion.major
         def verMinor = body.specVersion.minor
         def verPatch = body.specVersion.patch
+        def manufacturer = body.device.manufacturer
+        def modelDescription = body.device.modelDescription
+        def udn = body.device.UDN
         def name = body.device.friendlyName
-        sendEvent(name: "poolCntr", value: "${name} Version\n${verMajor}.${verMinor}.${verPatch}")
+        state.version = "${name} Version\n${verMajor}.${verMinor}.${verPatch}"
+        state.manufacturer = "By ${manufacturer}\n${modelDescription}"
+        sendEvent(name: "poolCntr", value: state.version)
+        state.Cntr = true
         return null
     }    
 
+    // process json messages
     def json = msg.data
-    //log.warn "json = ${json}"
+    if (state.debug) log.warn "json = ${json}"
     
+    // return if no json
     if (!json)
         return null
-        
-    def keys = json.keySet()
-    keys.each() {
+     
+    // process each json key 
+    //def keys = json.keySet()
+    json.keySet().each() {
       def key = it
       switch (key) {
         case "value":
@@ -592,30 +544,30 @@ def parse(String description) {
               log.warn "status = ${json.status}"
               break
         case "text":
-              if (state.debug) log.info "### parse : text ###"
+              log.info "### parse : text ###"
               log.warn "parse: response: json = ${json}"
               if (state.debug) log.warn "Response: ${json.text}"
               if (state.debug) log.warn "Status: ${json.status}"
               if (state.debug) log.warn "value: ${json.value}"
               if (json.text.contains("POOL LIGHT")) {       
-                  sendEvent(name: "poolLight", value: "${json.status}")
+                  sendEvent(name: "POOL LIGHT", value: "${json.status}")
               } else if (json.text.contains("SPA LIGHT")) {
-                  sendEvent(name: "spaLight", value: "${json.status}")
+                  sendEvent(name: "SPA LIGHT", value: "${json.status}")
               } else if (json.text.contains("CLEANER")) {
-                  sendEvent(name: "cleaner", value: "${json.status}")
+                  sendEvent(name: "CLEANER", value: "${json.status}")
               } else if (json.text.contains("HIGH SPEED")) {
-                  sendEvent(name: "highspeed", value: "${json.status}") 
+                  sendEvent(name: "HIGH SPEED", value: "${json.status}") 
               } else if (json.text.contains("SPILLWAY")) {
-                  sendEvent(name: "spillWay", value: "${json.status}")
+                  sendEvent(name: "SPILLWAY", value: "${json.status}")
               } else if (json.text.contains("set spa heat setpoint")) {
               	  sendEvent(name: "heatingSetpoint", value: "${json.value}")
                   sendEvent(name: "device.temperature", value: "${json.value}")
               } else if (json.text.contains("toggle SPA to")) {
-                  sendEvent(name: "spa", value: "${json.status}")
-              } else if (json.text.contains("POOL")) {
-                  sendEvent(name: "pool", value: "${json.status}")
+                  sendEvent(name: "SPA", value: "${json.status}")
+              } else if (json.text.contains("toggle POOL to")) {
+                  sendEvent(name: "POOL", value: "${json.status}")
               } else if (json.text.contains("BLOWER")) {
-                  sendEvent(name: "blower", value: "${json.status}")
+                  sendEvent(name: "AIR BLOWER", value: "${json.status}")
               }
               break
         case "time":
@@ -628,8 +580,9 @@ def parse(String description) {
               def controllerDoW = time.controllerDayOfWeekStr
               sendEvent(name: "timedate", value: "${controllerDoW}\n${controllerDate}\n${controllerTime}\n("+state.uom+")")
               break
-        case "heat":  
-              if (state.debug) log.info "### parse : heat ###"
+        case "heat": 
+              log.info "### parse : heat - merged with temperature - no break ###"
+        /*      
               if (state.debug) log.info "heat = ${json.heat}"
               def heat = json.heat
               def poolSetPoint = heat.poolSetPoint
@@ -638,14 +591,15 @@ def parse(String description) {
               def spaSetPoint = heat.spaSetPoint
               def spaHeatMode = heat.spaHeatMode
               def spaHeatModeStr = heat.spaHeatModeStr
-              def heaterActive = heat.heaterActive 
+              //def heaterActive = heat.heaterActive 
 
               sendEvent(name: "temperature", value: "${spaSetPoint}")
               sendEvent(name: "heatingSetpoint", value: "${spaSetPoint}°")
               sendEvent(name: "spaHeatMode", value: "Spa Heater Mode: ${spaHeatModeStr}\nSpa Set Point: ${spaSetPoint}°")
               sendEvent(name: "poolHeatMode", value: "Pool Heater Mode: ${poolHeatModeStr}\nPool Set Point: ${poolSetPoint}°")
               sendEvent(name: "spaMode", value: "${spaHeatModeStr}")
-              break
+              break 
+              */
         case "temperature":
               if (state.debug) log.info "### parse : temperatures ###"  
               if (state.debug) log.info "temperature = ${json.temperature}"
@@ -653,15 +607,15 @@ def parse(String description) {
               def poolTemp = temperatures.poolTemp
               def spaTemp = temperatures.spaTemp
               def airTemp = temperatures.airTemp
-              def solarTemp = temperatures.solarTemp
-              def freeze = OnOffconvert(temperatures.freeze)
+              //def solarTemp = temperatures.solarTemp
+              def freeze = temperatures.freeze?.is(1) ? "on" : "off"
               def poolSetPoint = temperatures.poolSetPoint
-              def poolHeatMode = temperatures.poolHeatMode
+              //def poolHeatMode = temperatures.poolHeatMode
               def poolHeatModeStr = temperatures.poolHeatModeStr
               def spaSetPoint = temperatures.spaSetPoint
-              def spaHeatMode = temperatures.spaHeatMode
+              //def spaHeatMode = temperatures.spaHeatMode
               def spaHeatModeStr = temperatures.spaHeatModeStr
-              def heaterActive = temperatures.heaterActive
+              //def heaterActive = temperatures.heaterActive
 
               sendEvent(name: "poolTemp", value: "${poolTemp}")
               sendEvent(name: "spaTemp", value: "${spaTemp}")
@@ -674,28 +628,29 @@ def parse(String description) {
               sendEvent(name: "temperature", value: "${spaSetPoint}")
               break
         case "circuit":
-              if (state.debug) log.info "### parse : circuits ###" 
+              log.info "### parse : circuits ###" 
               def circuits = json.circuit
-              if (state.warn) log.info "******** circuits = ${circuits} ************"
-              def spaStatus = circuits[state.circuit.spa].status
-              def airBlowerStatus = circuits[state.circuit.blower].status
-              def poolLightStatus = circuits[state.circuit.poolLight].status
-              def spaLightStatus = circuits[state.circuit.spaLight].status
-              def cleanerStatus = circuits[state.circuit.cleaner].status
-              def poolStatus = circuits[state.circuit.pool].status
-              def highSpeedStatus = circuits[state.circuit.highSpeed].status
-              def spillwayStatus = circuits[state.circuit.spillway].status                   
-           
-              //log.info "poolLightStatus: ${poolLightStatus}\n, spaLightStatus: ${spaLightStatus}\n, poolStatus: ${poolStatus}\n, spaStatus: ${spaStatus}"
-              //log.info "cleanerStatus: ${cleanerStatus}\n, spillwayStatus: ${spillwayStatus}\n, blowerStatus: ${airBlowerStatus}\n, highSpeedStatus: ${highSpeedStatus}"
-                       
-              sendEvent(name: "poolLight", value: OnOffconvert("${poolLightStatus}"))
-              sendEvent(name: "spaLight", value: OnOffconvert("${spaLightStatus}"))
-              sendEvent(name: "pool", value: OnOffconvert("${poolStatus}"))
-              sendEvent(name: "cleaner", value: OnOffconvert("${cleanerStatus}"))
-              sendEvent(name: "highspeed", value: OnOffconvert("${highSpeedStatus}"))
-              sendEvent(name: "spillWay", value: OnOffconvert("${spillwayStatus}"))
-              sendEvent(name: "blower", value: OnOffconvert("${airBlowerStatus}"))
+              if (state.debug) log.info "state.circuit = ${state.circuit}"           
+              if (state.debug) log.info "******** circuits = \n${circuits} ************"
+              circuits.keySet().each {
+                 def c = circuits[it]
+                 def String cname = c.name
+               
+                 if (!cname.contains('FEATURE') && !cname.contains("NOT USED") && !cname.contains("AUX")) {
+                     state.circuit[cname] = c.number
+                 } else {
+                     state.circuit.remove(cname)
+                     state.circuit.remove("true")
+                 }       
+                 
+              }
+              state.circuit.remove("spa") // remove place holder kv pair
+              
+              state.circuit.keySet().each {
+                  def num = state.circuit[it]
+                  def status = circuits."${num}".status
+                  sendEvent(name: "${it}", value: status?.is(1) ? "on" : "off")
+              }
               
               def heatvalue = "off"
               if (spaStatus == 1) {
@@ -711,36 +666,32 @@ def parse(String description) {
               def pumps = json.pump
               pumps.keySet().each {      
                   def pump = pumps[it]
-                  if (state.debug_pump) log.debug "pump ${it} = ${pump}"
-                  //if (state.debug_pump) log.info "Pump " + it + " Data -- " + pump            
+                  if (state.debug_pump) log.debug "pump ${it} = ${pump}"           
                   if (state.debug_pump) log.info "Pump name = " + pump.name
                   if (state.debug_pump) log.info "friendlyName = " + pump.friendlyName
-                  //sendEvent(name: "PumpHdr${it}", value: "${pump.friendlyName} Pump")
                   sendEvent(name: "${pump.name}", value: "${pump.friendlyName}\n---Pump---\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
-                //sendEvent(name: "${pump.name}", value: "Watts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
               } 
               break
         case "chlorinator":
               def chlor = json.chlorinator
-              //log.info "chlor = ${chlor}"
+              if (state.debug) log.info "chlor = ${chlor}"
               break
         case "config":
               def config = json.config
               if (state.debug) log.debug "config = ${config}"
-              def state = OnOffconvert(config.systemReady)
-              sendEvent(name: "config", value: "${state}")
+              sendEvent(name: "config", value: config.systemReady?.is(1) ? "on" : "off")
               break
         case "UOM":
               state.uom = json.UOM.UOMStr
-              //log.info "uom = ${state.uom}"
+              if (state.debug) log.info "uom = ${state.uom}"
               break
         case "valve":
               def valve = json.valve
-              //log.info "valve = ${valve}"
+              if (state.debug) log.info "valve = ${valve}"
               break
         case "intellichem":
               def intellichem = json.intellichem
-              //log.info "intell = ${intell}"
+              if (state.debug) log.info "intell = ${intell}"
               break
         case "schedule":
            	  if (state.debug) log.info "### parse : schedule ##"
@@ -800,17 +751,6 @@ def parse(String description) {
      }   
 }  
 
-def OnOffconvert(value) {
-    if (value == "0")
-       return ("off")
-    if (value == "1")   
-       return ("on")
-    if (value == 0)
-    	return ("OFF")
-    if (value == 1)
-        return ("ON")
-}
-
 def setFeature(query) {
     def userpass = encodeCredentials(username, password)
     def headers = getHeader(userpass)
@@ -823,7 +763,7 @@ def setFeature(query) {
         dni
 	)
     
-    log.info "setFeature : poolAction =\n${poolAction}"
+    log.info "setFeature query: ${query}\npoolAction =\n${poolAction}"
 	return poolAction
 }
 
@@ -841,15 +781,13 @@ def alterSetpoint(targetValue) {
     setSpaHeatPoint(targetValue)  
 }
 
+/*
 def setSpaHeatPoint(value) {
     //def action = setFeature("/spaheat/setpoint/${value}")
     sendHubCommand(setFeature("/spaheat/setpoint/${value}"))
 }
+*/
 // commands
-
-//def setuom() {
-//    log.debug "setuom"
-//}
 
 def setPoint(num) {
 	log.debug "setSpaHeatPoint : num = ${num}"
@@ -938,66 +876,66 @@ def spaModeToggle() {
             value = "Heater"
     }        
         
-    //log.info "new mode = ${value}"
-    //log.info "num = ${num}"
-	//def action = setFeature("/spaheat/mode/${num}")
     sendHubCommand(setFeature("/spaheat/mode/${num}"))
     sendEvent(name: "spaMode", value: "${value}")
 }
 
-def testToggle() {
-    //log.error "TEST"
-    //def action = setFeature("/device")
-    sendHubCommand(setFeature("/device"))
+def displayCntr() {
+    //log.info "state.Cntr = ${state.Cntr}"
+    if (state.Cntr) {
+        sendEvent(name:"poolCntr", value: state.version, isStateChange: "true")
+        state.Cntr = true
+    } else {  
+        sendEvent(name:"poolCntr", value: state.manufacturer, isStateChange: "true")  
+        state.Cntr = false
+    }    
+    state.Cntr = !state.Cntr     
+}
+
+def Toggle(device) {
+    def num = state.circuit[device]
+    sendHubCommand(setFeature("/circuit/${num}/toggle/"))
 }
 
 def spaToggle() {
     // turns spa heater on/off
 	log.error "Executing 'spaToggle'"
-    //def action = setFeature("/circuit/${state.circuit['spa']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['spa']}/toggle/"))
+    Toggle('SPA')
 }
 
 def blowerToggle() {
 	log.error "Executing 'blowerToggle'"  
-    //def action = setFeature("/circuit/${state.circuit['blower']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['blower']}/toggle/"))
+    Toggle('AIR BLOWER')
 }
 
 def poolLightToggle() {
 	log.error "Executing 'poolLightToggle'"
-    //def action = setFeature("/circuit/${state.circuit['poolLight']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['poolLight']}/toggle/"))
+    Toggle('POOL LIGHT')
 }
 
 def spaLightToggle() {
 	log.error "Executing 'spaLightToogle'"
-    //def action = setFeature("/circuit/${state.circuit['spaLight']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['spaLight']}/toggle/"))
+    Toggle('SPA LIGHT')
 }
 
 def cleanerToggle() {
 	log.error "Executing 'cleanerToogle'"
-    //def action = setFeature("/circuit/${state.circuit['cleaner']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['cleaner']}/toggle/"))
+    Toggle('CLEANER')
 }
 
 def poolToggle() {
 	log.error "Executing 'poolToogle'"
-   // def action = setFeature("/circuit/${state.circuit['pool']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['pool']}/toggle/"))
+    Toggle('POOL')
 }
 
 def highspeedToggle() {
 	log.error "Executing 'highspeedToggle'"
-    //def action = setFeature("/circuit/${state.circuit['highSpeed']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['highSpeed']}/toggle/"))
+    Toggle('HIGH SPEED')
 }
 
 def spillWayToggle() {
 	log.error "Executing 'spillWayToogle'"
-    //def action = setFeature("/circuit/${state.circuit['spillway']}/toggle/")
-    sendHubCommand(setFeature("/circuit/${state.circuit['spillway']}/toggle/"))
+    Toggle('SPILLWAY')
 }
 
 // private functions
