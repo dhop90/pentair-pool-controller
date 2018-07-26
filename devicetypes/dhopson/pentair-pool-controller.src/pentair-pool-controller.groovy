@@ -14,8 +14,8 @@
  * Adapted from (name: "Pentair Controller", namespace: "michaelusner", author: "Michael Usner", oauth: true)
  */
  
-import groovy.json.JsonSlurper
-import groovy.util.XmlSlurper
+//import groovy.json.JsonSlurper
+//import groovy.util.XmlSlurper
  
 metadata {
 	definition (name: "Pentair Pool Controller", namespace: "dhopson", author: "David Hopson", oauth: true) {
@@ -53,9 +53,9 @@ metadata {
             input name: "debug_pump", type: "bool", title: "Enable pump debug?", description: "Debug pump", required: false
             }
             
-         section("Schedules") {   
+         section("schedules") {   
             input name: "controllerTime", type: "time", title: "System Time", descripiton: "Enter Time, then select time tile to update", required: false
-            input name: "EggTimer", type: "bool", title: "Is this an egg timer?", description: "Egg timer and not a Schedule?", required: false
+            input name: "eggTimerORschedule", type: "bool", title: "Is this an egg timer?", description: "Egg timer and not a Schedule?", required: false
             input name: "sch_circuit", type: "enum", title: "Circuit Name", description: "Which circuit should be used for this schedule", required: false, options:[
                     "SPA",
         			"AIR BLOWER",
@@ -114,12 +114,13 @@ metadata {
         
         standardTile("freeze", "device.freeze", width:2, height: 2) {
         	state "on", label:'Freeze:${currentValue}', defaultState: true, nextState: "on", backgroundColor: "#bc2323", icon: "st.Weather.weather2"
-            state "off", label:'Freeze:${currentValue}', defaultState: true, nextState: "off", backgroundColor: "#79b821", icon: "st.Weather.weather2"
+            state "off", label:'Freeze:${currentValue}', defaultState: false, nextState: "off", backgroundColor: "#79b821", icon: "st.Weather.weather2"
         }
         
         standardTile("config", "device.config", width:2, height: 2) {
+            state "unknown", label: 'Unknown', defaultState: false, backgroundColor: "#F2F200", icon: "st.Health & Wellness.health2"
         	state "on", label:'Ready', defaultState: true, nextState: "off", backgroundColor: "#79b821", icon: "st.Health & Wellness.health2"
-            state "off", label:'Not Ready', defaultState: true, nextState: "on", backgroundColor: "#bc2323", icon: "st.Health & Wellness.health2"
+            state "off", label:'Not Ready', defaultState: false, nextState: "on", backgroundColor: "#bc2323", icon: "st.Health & Wellness.health2"
         }
         
         //////////////////////////////////////////////////
@@ -189,7 +190,6 @@ metadata {
 			state "on", label: 'HIGH SPEED ${name}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#79b821", nextState: "off"
 		}
  
-        //////////////////////////////////////////////////
         standardTile("CLEANER", "device.CLEANER", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'CLEANER', action: "cleanerUnknown", icon: "st.Appliances.appliances2", backgroundColor: "#F2F200"
 			state "off", label: 'CLEANER ${name}', action: "cleanerToggle", icon: "st.Appliances.appliances2", backgroundColor: "#ffffff", nextState: "on"
@@ -286,12 +286,12 @@ metadata {
 		} 
   
         //////////////////////////////////////////////////  
-        valueTile("Schedule", "device.Schedule", width: 6, height: 10, decoration: "flat", canChangeBackground: false) {
-			state "Schedule", label:'${currentValue}', defaultState: false
+        valueTile("schedule", "device.schedule", width: 6, height: 10, decoration: "flat", canChangeBackground: false) {
+			state "schedule", label:'${currentValue}', defaultState: true
 		}
-        //valueTile("EggTimer", "device.EggTimer", width: 6, height: 4, type:"generic", decoration: "flat") {
-        valueTile("EggTimer", "device.EggTimer", width: 6, height: 5, decoration: "flat", canChangeBackground: false) {
-			state "EggTimer", label:'${currentValue}', defaultState: true
+        
+        valueTile("eggTimerTile", "device.eggTimerTile", width: 6, height: 5, decoration: "flat", canChangeBackground: false) {
+			state "eggTimerTile", label:'${currentValue}', defaultState: true
 		}  
 
         //////////////////////////////////////////////////  
@@ -307,8 +307,6 @@ metadata {
 			state "Solar Pref", label: '${name}', action: "spaModeToggle", backgroundColor: "#ffffff", nextState: "Solar Only"
 			state "Solar Only", label: '${name}', action: "spaModeToggle", backgroundColor: "#ffffff", nextState: "Off"
 		}    
-        
-        // Runs Pool filter
                   
         standardTile("poolUp", "device.poolUp", width: 2, height: 2) {
 			state "up", label: 'Up', action: "tempUp", backgroundColor: "#ffffff",icon: "st.thermostat.thermostat-up"
@@ -322,31 +320,37 @@ metadata {
 			state "on", label: 'Time', action: "setdatetime", backgroundColor: "#ffffff",icon: "st.secondary.refresh-icon"
 		}
         
-        standardTile("setschedule", "device.setschedule", width: 2, height: 2, canChangeBackground: true) {
-			state "on", label: 'Schedule', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.add-icon"
+        standardTile("setschedule", "device.setschedule", width: 1, height: 1, canChangeBackground: false) {
+			state "on", label: 'add', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.add-icon", nextState: "off"
+            state "off", label: 'add', action: "addSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.add-icon", nextState: "on"
 		}   
         
-        standardTile("delschedule", "device.delschedule", width: 2, height: 2, canChangeBackground: true) {
-			state "on", label: 'Schedule', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.subtract-icon"
-		}   
+        valueTile("eggTimerSchedule", "device.eggTimerSchedule", width:5, height: 2, canChangeBackground: false) {
+        	state "on", label: '${currentValue}', nextState: "off"
+            state "off", label: '${currentValue}', nextState: "on"
+        }
+        
+        standardTile("delschedule", "device.delschedule", width: 1, height: 1, canChangeBackground: false) {
+			state "on", label: 'delete', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.subtract-icon", nextState: "off"
+		    state "off", label: 'delete', action: "delSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.subtract-icon", nextState: "on"
+        }   
         
         main(["poolTemp"])
 
         details([
         "poolCntr", "timedate",
         "refresh", "config", "freeze", 
-        //"poolHeatMode", "spaHeatMode",
         "airTemp", "poolTemp", "spaTemp",
         "POOL LIGHT", "SPA LIGHT", "HIGH SPEED", 
         "CLEANER", "SPILLWAY", "AIR BLOWER", 
+        "POOL","blank", "blank",
         "spaDown","SPA","spaUp",
-        "POOL","setschedule", "delschedule",
         "thermostatFullspa",
         "poolHeatMode", "spaHeatMode",
-        //"PumpHdr1","PumpHdr2",
         "Pump 1","Pump 2",
-        "EggTimer",        
-        "Schedule"
+        "setschedule", "eggTimerSchedule", "delschedule",
+        "eggTimerTile",        
+        "schedule"
  		])
 	}
 }
@@ -356,9 +360,10 @@ def updated() {
     state.debug = debug
     state.debug_pump = debug_pump
     
-    state.uom = ""
-    state.Cntr = true
+    //state.uom = ""
+    //state.Cntr = true
     initialize()
+    refresh()
 }
 
 def installed() {
@@ -370,7 +375,6 @@ def installed() {
 def initialize() {
 	runEvery1Minute(refresh)
 
-    state.circuit = [spa:1] // can't have an empty map, will be deleted once circuits are discovered
     sendHubCommand(setFeature("/circuit"))
     
     state.dayValueMap = [Sunday:1,Monday:2,Tuesday:4,Wednesday:8,Thursday:16,Friday:32,Saturday:64,
@@ -388,10 +392,41 @@ def initialize() {
 def refresh() {
     if (state.debug) log.warn "Requested a refresh"
     poll()
-    sendEvent(name: "refresh", isStateChange: "true", value: "refresh")
-    sendEvent(name: "config", value:"off");
+    sendEvent(name: "refresh", isStateChange: "true", value: "refresh", descriptionText: "Refresh was activated")
+    sendEvent(name: "config", value:"unknown", descriptionText: "System Status is unknown");
+    updateSchedule()
 }
 
+
+def updateSchedule() {
+    def ID = sch_id? sch_id : 0
+    def mode = eggTimerORschedule?.is(0) ? "EggTimer" : "Schedule"
+    def dow = build_dow()
+    if (eggTimerORschedule) {
+        //eggTimer
+        sendEvent(name: "eggTimerSchedule", value: "Egg Timer\nID:${sch_id} Name:${sch_circuit}\nDuration ${egg_hour}:${egg_min}", isStateChange: "true")
+    } else {
+        //schedule
+        log.debug "time = ${sch_start} ${sch_end}"
+        if (!sch_start || !sch_end) {
+           def sch_starthh = null
+           def sch_startmm = null
+           def sch_endhh = null
+           def sch_ednmm = null
+        } else {
+        //if (sch_start) {
+            Date startTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_start)  
+            Date endTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_end)   
+            String sch_starthh = get_hour(startTime)
+            String sch_startmm = get_minute(startTime)
+            String sch_endhh = get_hour(endTime)
+            String sch_endmm = get_minute(endTime)
+        }    
+        sendEvent(name: "eggTimerSchedule", value: "Schedule\nID:${sch_id} Name:${sch_circuit}\nStart: ${sch_starthh}:${sch_startmm} End:${sch_endhh}:${sch_endmm}\n ${dow}", isStateChange: "true")
+        sendEvent(name: "setschedule", isStateChange: "true", value: "add", descriptionText: "setsechedule was updated")
+        sendEvent(name: "delschedule", isStateChange: "true", value: "delete", descriptionText: "delschedule was updated")
+    }    
+}
 def poll() {
 	// poll gets /all & /device status messages from pool controller (raspberry Pi)
     // this runs every minute
@@ -407,6 +442,15 @@ def get_hour(time) {
 
 def get_minute(time) {
    return time.format('mm')
+}
+
+def build_dow() {
+    log.debug "state.dayMap = ${state.dayMap}"
+    def dow = []
+    state.dayMap.keySet().each {
+       if (state.dayMap[it]) dow << it
+    }   
+    return (dow)
 }
 
 def calc_dow() {      
@@ -430,7 +474,7 @@ def calc_dow() {
 def addSchedule() {
     if (!sch_circuit | !sch_id) return
     def sch_circuit_num = state.circuit[sch_circuit]
-    if (EggTimer) {
+    if (eggTimerORschedule) {
        def addeggtimer = setFeature("/eggtimer/set/id/${sch_id}/circuit/${sch_circuit_num}/hour/${egg_hour}/min/${egg_min}")
        sendHubCommand(addeggtimer)
     } else {
@@ -498,8 +542,10 @@ def setdatetime() {
 
 def parse(String description) {
 	if (state.debug) log.debug "############ Parse #############"
+    
     def msg = parseLanMessage(description)
-
+    if (!msg) return null
+    
     def xmlerror = msg.xmlError
     if (xmlerror) {
        log.debug "Error: ${xmlerror}"
@@ -515,22 +561,28 @@ def parse(String description) {
         def verPatch = body.specVersion.patch
         def manufacturer = body.device.manufacturer
         def modelDescription = body.device.modelDescription
-        def udn = body.device.UDN
+        //def udn = body.device.UDN
         def name = body.device.friendlyName
         state.version = "${name} Version\n${verMajor}.${verMinor}.${verPatch}"
         state.manufacturer = "By ${manufacturer}\n${modelDescription}"
-        sendEvent(name: "poolCntr", value: state.version)
-        state.Cntr = true
+        //displayCntr()
+        //sendEvent(name: "poolCntr", value: state.version)
+       //state.Cntr = true
+        
+        sendEvent(name: "addSchedule", value: "off", isStateChange: "true")
+        sendEvent(name: "delSchedule", value: "off", isStateChange: "true")
+
         return null
     }    
 
+
+    
     // process json messages
     def json = msg.data
     if (state.debug) log.warn "json = ${json}"
     
     // return if no json
-    if (!json)
-        return null
+    if (!json) return null
      
     // process each json key 
     //def keys = json.keySet()
@@ -538,14 +590,14 @@ def parse(String description) {
       def key = it
       switch (key) {
         case "value":
-              log.warn "value = ${json.value}"
+              if (state.debug) log.warn "value = ${json.value}"
               break
         case "status":
-              log.warn "status = ${json.status}"
+              if (state.debug) log.warn "status = ${json.status}"
               break
         case "text":
               log.info "### parse : text ###"
-              log.warn "parse: response: json = ${json}"
+              log.warn "parse: text response: json = ${json}"
               if (state.debug) log.warn "Response: ${json.text}"
               if (state.debug) log.warn "Status: ${json.status}"
               if (state.debug) log.warn "value: ${json.value}"
@@ -574,7 +626,7 @@ def parse(String description) {
               if (state.debug) log.info "### parse : time ###"
               if (state.debug) log.debug "time = ${json.time}"
               def time = json.time
-              if (state.warn) log.info "time = ${time}"
+              if (state.debug) log.info "time = ${time}"
               def controllerTime = time.controllerTime
               def controllerDate = time.controllerDateStr
               def controllerDoW = time.controllerDayOfWeekStr
@@ -582,24 +634,6 @@ def parse(String description) {
               break
         case "heat": 
               log.info "### parse : heat - merged with temperature - no break ###"
-        /*      
-              if (state.debug) log.info "heat = ${json.heat}"
-              def heat = json.heat
-              def poolSetPoint = heat.poolSetPoint
-              def poolHeatMode = heat.poolHeatMode
-              def poolHeatModeStr = heat.poolHeatModeStr
-              def spaSetPoint = heat.spaSetPoint
-              def spaHeatMode = heat.spaHeatMode
-              def spaHeatModeStr = heat.spaHeatModeStr
-              //def heaterActive = heat.heaterActive 
-
-              sendEvent(name: "temperature", value: "${spaSetPoint}")
-              sendEvent(name: "heatingSetpoint", value: "${spaSetPoint}°")
-              sendEvent(name: "spaHeatMode", value: "Spa Heater Mode: ${spaHeatModeStr}\nSpa Set Point: ${spaSetPoint}°")
-              sendEvent(name: "poolHeatMode", value: "Pool Heater Mode: ${poolHeatModeStr}\nPool Set Point: ${poolSetPoint}°")
-              sendEvent(name: "spaMode", value: "${spaHeatModeStr}")
-              break 
-              */
         case "temperature":
               if (state.debug) log.info "### parse : temperatures ###"  
               if (state.debug) log.info "temperature = ${json.temperature}"
@@ -638,14 +672,10 @@ def parse(String description) {
                
                  if (!cname.contains('FEATURE') && !cname.contains("NOT USED") && !cname.contains("AUX")) {
                      state.circuit[cname] = c.number
-                 } else {
-                     state.circuit.remove(cname)
-                     state.circuit.remove("true")
-                 }       
-                 
+                 }    
               }
-              state.circuit.remove("spa") // remove place holder kv pair
               
+              // set status/state for each tile
               state.circuit.keySet().each {
                   def num = state.circuit[it]
                   def status = circuits."${num}".status
@@ -679,7 +709,7 @@ def parse(String description) {
         case "config":
               def config = json.config
               if (state.debug) log.debug "config = ${config}"
-              sendEvent(name: "config", value: config.systemReady?.is(1) ? "on" : "off")
+              sendEvent(name: "config", value: config.systemReady?.is(1) ? "on" : "off", descriptionText: "System Status is ${config.systemReady?.is(1) ? 'on' : 'off'}")
               break
         case "UOM":
               state.uom = json.UOM.UOMStr
@@ -740,8 +770,8 @@ def parse(String description) {
                       fullSchedule = fullSchedule + "${ID}${space}${CIRCUIT}${space}${START_TIME}${space}${END_TIME}\nDAYS:${days}\n\n"
                   }
   			 }	
-             sendEvent(name: "Schedule", value: "${fullSchedule}")
-             sendEvent(name: "EggTimer", value: "${eggSchedule}")
+             sendEvent(name: "schedule", value: "${fullSchedule}")
+             sendEvent(name: "eggTimerTile", value: "${eggSchedule}")
             
            	 break
 		default:
@@ -776,17 +806,17 @@ def getTempInLocalScale(state) {
 }
 
 def alterSetpoint(targetValue) {
-	def locationScale = getTemperatureScale()
-	def deviceScale = (state.scale == 1) ? "F" : "C" 
+	//def locationScale = getTemperatureScale()
+	//def deviceScale = (state.scale == 1) ? "F" : "C" 
     setSpaHeatPoint(targetValue)  
 }
 
-/*
+
 def setSpaHeatPoint(value) {
     //def action = setFeature("/spaheat/setpoint/${value}")
     sendHubCommand(setFeature("/spaheat/setpoint/${value}"))
 }
-*/
+
 // commands
 
 def setPoint(num) {
@@ -881,7 +911,7 @@ def spaModeToggle() {
 }
 
 def displayCntr() {
-    //log.info "state.Cntr = ${state.Cntr}"
+    log.info "state.Cntr = ${state.Cntr}"
     if (state.Cntr) {
         sendEvent(name:"poolCntr", value: state.version, isStateChange: "true")
         state.Cntr = true
