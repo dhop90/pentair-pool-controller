@@ -19,12 +19,13 @@
  
 metadata {
 	definition (name: "Pentair Pool Controller", namespace: "dhopson", author: "David Hopson", oauth: true) {
+        //capability
         capability "Switch"
     	capability "Polling"        
         capability "Refresh"
         capability "Temperature Measurement"
         capability "Thermostat"
-       
+       //commands
         command "poolToggle"
         command "spaToggle"
         command "spaModeToggle"
@@ -189,7 +190,6 @@ metadata {
 			state "off", label: 'HIGH SPEED ${name}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'HIGH SPEED ${name}', action: "highspeedToggle", icon: "st.thermostat.thermostat-right", backgroundColor: "#79b821", nextState: "off"
 		}
- 
         standardTile("CLEANER", "device.CLEANER", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'CLEANER', action: "cleanerUnknown", icon: "st.Appliances.appliances2", backgroundColor: "#F2F200"
 			state "off", label: 'CLEANER ${name}', action: "cleanerToggle", icon: "st.Appliances.appliances2", backgroundColor: "#ffffff", nextState: "on"
@@ -220,18 +220,15 @@ metadata {
         	state "unknown", label: 'SPA', action: "spaUnknown", icon: "st.Bath.bath4", backgroundColor: "#F2F200"
 			state "off", label: 'SPA ${name}', action: "spaToggle", backgroundColor: "#ffffff", nextState: "on", icon: "st.Bath.bath4" //,icon: "st.thermostat.heat"
 			state "on", label: 'SPA ${name}', action: "spaToggle", backgroundColor: "#79b821", nextState: "off", icon: "st.Bath.bath4" //,icon: "st.thermostat.heating"
-        }
-        
+        }     
         standardTile("spaDown", "device.spaDown", width: 2, height: 2, canChangeBackground: true) {
 			state "down", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "push", backgroundColor: "#ffffff"
   			state "push", label: 'Down', action: "tempDown",icon: "st.thermostat.thermostat-down",nextState: "down", backgroundColor: "#cccccc"           
-		}
-        
+		}       
         standardTile("heatingSetpoint", "device.heatingSetpoint", width: 2, height: 2, canChangeBackground: true, key: "HEATING_SETPOINT") {
 			 state "off", label: '${name}: ${currentValue}', action: "spaToggle", unit: "dF", icon: "st.Bath.bath4", backgroundColor: "#ffffff", nextState: "on"
 			 state "on" , label: '${name}: ${currentValue}', action: "spaToggle", unit: "dF", icon: "st.Bath.bath4", backgroundColor: "#79b821", nextState: "off"
-		}
-          
+		}          
         standardTile("spaUp", "device.spaUp", width: 2, height: 2, canChangeBackground: true) {
 			state "up", label: 'Up', action: "tempUp",icon: "st.thermostat.thermostat-up",nextState: "push", backgroundColor: "#ffffff"
 			state "push", label: 'Up', action: "tempUp",icon: "st.thermostat.thermostat-up",nextState: "up", backgroundColor: "#cccccc"
@@ -320,9 +317,9 @@ metadata {
 			state "on", label: 'Time', action: "setdatetime", backgroundColor: "#ffffff",icon: "st.secondary.refresh-icon"
 		}
         
-        standardTile("setschedule", "device.setschedule", width: 1, height: 1, canChangeBackground: false) {
-			state "on", label: 'add', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.add-icon", nextState: "off"
-            state "off", label: 'add', action: "addSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.add-icon", nextState: "on"
+        standardTile("addschedule", "device.addschedule", width: 1, height: 1, canChangeBackground: false) {
+			state "add", label: '${currentValue}', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.add-icon", nextState: "activated"
+            state "activated", label: '${currentValue}', action: "addSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.add-icon", nextState: "add"
 		}   
         
         valueTile("eggTimerSchedule", "device.eggTimerSchedule", width:5, height: 2, canChangeBackground: false) {
@@ -331,8 +328,8 @@ metadata {
         }
         
         standardTile("delschedule", "device.delschedule", width: 1, height: 1, canChangeBackground: false) {
-			state "on", label: 'delete', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.subtract-icon", nextState: "off"
-		    state "off", label: 'delete', action: "delSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.subtract-icon", nextState: "on"
+			state "delete", label: '${currentValue}', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.subtract-icon", nextState: "activated"
+		    state "activated", label: '${currentValue}', action: "delSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.subtract-icon", nextState: "delete"
         }   
         
         main(["poolTemp"])
@@ -348,7 +345,7 @@ metadata {
         "thermostatFullspa",
         "poolHeatMode", "spaHeatMode",
         "Pump 1","Pump 2",
-        "setschedule", "eggTimerSchedule", "delschedule",
+        "addschedule", "eggTimerSchedule", "delschedule",
         "eggTimerTile",        
         "schedule"
  		])
@@ -392,7 +389,7 @@ def initialize() {
 def refresh() {
     if (state.debug) log.warn "Requested a refresh"
     poll()
-    sendEvent(name: "refresh", isStateChange: "true", value: "refresh", descriptionText: "Refresh was activated")
+    //sendEvent(name: "refresh", isStateChange: "true", value: "Idle", descriptionText: "Refresh was activated")
     sendEvent(name: "config", value:"unknown", descriptionText: "System Status is unknown");
     updateSchedule()
 }
@@ -402,29 +399,28 @@ def updateSchedule() {
     def ID = sch_id? sch_id : 0
     def mode = eggTimerORschedule?.is(0) ? "EggTimer" : "Schedule"
     def dow = build_dow()
+    if (dow == []) dow = ""
+    def times
     if (eggTimerORschedule) {
         //eggTimer
         sendEvent(name: "eggTimerSchedule", value: "Egg Timer\nID:${sch_id} Name:${sch_circuit}\nDuration ${egg_hour}:${egg_min}", isStateChange: "true")
     } else {
         //schedule
-        log.debug "time = ${sch_start} ${sch_end}"
+        //log.debug "time = ${sch_start} ${sch_end}"
         if (!sch_start || !sch_end) {
-           def sch_starthh = null
-           def sch_startmm = null
-           def sch_endhh = null
-           def sch_ednmm = null
+            times = "Start: 0:0 End: 0:0"
+            //log.debug "times = ${times}"
         } else {
-        //if (sch_start) {
             Date startTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_start)  
             Date endTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_end)   
             String sch_starthh = get_hour(startTime)
             String sch_startmm = get_minute(startTime)
             String sch_endhh = get_hour(endTime)
             String sch_endmm = get_minute(endTime)
-        }    
-        sendEvent(name: "eggTimerSchedule", value: "Schedule\nID:${sch_id} Name:${sch_circuit}\nStart: ${sch_starthh}:${sch_startmm} End:${sch_endhh}:${sch_endmm}\n ${dow}", isStateChange: "true")
-        sendEvent(name: "setschedule", isStateChange: "true", value: "add", descriptionText: "setsechedule was updated")
-        sendEvent(name: "delschedule", isStateChange: "true", value: "delete", descriptionText: "delschedule was updated")
+            times = "Start: ${sch_starthh}:${sch_startmm} End: ${sch_endhh}:${sch_endmm}"
+            //log.debug "times = ${times}"
+        }   
+        sendEvent(name: "eggTimerSchedule", value: "Schedule\nID:${sch_id} Name:${sch_circuit}\n${times}\n ${dow}", isStateChange: "true")
     }    
 }
 def poll() {
@@ -445,7 +441,7 @@ def get_minute(time) {
 }
 
 def build_dow() {
-    log.debug "state.dayMap = ${state.dayMap}"
+    //log.debug "state.dayMap = ${state.dayMap}"
     def dow = []
     state.dayMap.keySet().each {
        if (state.dayMap[it]) dow << it
@@ -472,13 +468,20 @@ def calc_dow() {
 // curl -X GET http://user:pass@pi-pool:3000/schedule/set/id/7/circuit/3
 
 def addSchedule() {
-    if (!sch_circuit | !sch_id) return
+    
+    if (!sch_circuit | !sch_id) {
+       sendEvent(name: "addschedule", isStateChange: "true", value: "add", descriptionText: "addschedule was updated")
+       return
+    }   
     def sch_circuit_num = state.circuit[sch_circuit]
     if (eggTimerORschedule) {
        def addeggtimer = setFeature("/eggtimer/set/id/${sch_id}/circuit/${sch_circuit_num}/hour/${egg_hour}/min/${egg_min}")
        sendHubCommand(addeggtimer)
     } else {
-       if (!sch_start | !sch_end) return
+       if (!sch_start | !sch_end) {
+          sendEvent(name: "addschedule", isStateChange: "true", value: "add", descriptionText: "addschedule was updated")
+          return
+       }
        Date startTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_start)  
        Date endTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_end)  
 
@@ -503,14 +506,24 @@ def addSchedule() {
        if (state.debug) log.info "schedule set id:${sch_id} to circuit:${sch_circuit_num} for time: start hour:${sch_starthh} start min:${sch_startmm} end hour:${sch_endhh} end min:${sch_endmm} day of the week number:${sch_dow_num}"
        if (state.debug) log.info "addschedule = ${addschedule}"
        sendHubCommand(addschedule)
+       //sendEvent(name: "addschedule", isStateChange: "true", value: "add", descriptionText: "addsechedule was updated")
     }
+    sendEvent(name: "addschedule", isStateChange: "true", value: "add", descriptionText: "addsechedule was updated")
+    action = setFeature("/schedule")
+    sendHubCommand(action)
 }
 
 def delSchedule() {
    // app.get('/schedule/delete/id/:id'
    // 'REST API received request to delete schedule or egg timer with ID:' + id;
-   if (!sch_id) return
+   if (!sch_id) {
+       sendEvent(name: "delschedule", isStateChange: "true", value: "delete", descriptionText: "delschedule was updated")
+       return
+   }    
    def action = setFeature("/schedule/delete/id/${sch_id}") 
+   sendHubCommand(action)
+   sendEvent(name: "delschedule", isStateChange: "true", value: "delete", descriptionText: "delschedule was updated")
+   action = setFeature("/schedule")
    sendHubCommand(action)
 }
 
@@ -569,8 +582,8 @@ def parse(String description) {
         //sendEvent(name: "poolCntr", value: state.version)
        //state.Cntr = true
         
-        sendEvent(name: "addSchedule", value: "off", isStateChange: "true")
-        sendEvent(name: "delSchedule", value: "off", isStateChange: "true")
+        //sendEvent(name: "addSchedule", value: "off", isStateChange: "true")
+        //sendEvent(name: "delSchedule", value: "off", isStateChange: "true")
 
         return null
     }    
@@ -772,12 +785,13 @@ def parse(String description) {
   			 }	
              sendEvent(name: "schedule", value: "${fullSchedule}")
              sendEvent(name: "eggTimerTile", value: "${eggSchedule}")
-            
+             //updateSchedule()
            	 break
 		default:
             log.info "### parse : default ###"
             log.info "key = ${key}"
 		}  
+        sendEvent(name: "refresh", isStateChange: "true", value: "Idle", descriptionText: "Refresh was activated")
      }   
 }  
 
