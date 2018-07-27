@@ -171,8 +171,7 @@ metadata {
                 [value: 96, color: "#bc2323"]
             ])
     	}
-        
-        
+              
         //////////////////////////////////////////////////
         
         standardTile("POOL LIGHT", "device.POOL LIGHT", width: 2, height: 2, canChangeBackground: true) {
@@ -204,8 +203,7 @@ metadata {
         	state "unknown", label: 'AIR BLOWER', action: "blowerUnknown", icon: "st.vents.vent", backgroundColor: "#F2F200"
 			state "off", label: 'AIR BLOWER ${name}', action: "blowerToggle", icon: "st.vents.vent", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'AIR BLOWER ${name}', action: "blowerToggle", icon: "st.vents.vent-open", backgroundColor: "#79b821", nextState: "off"
-		}
-     
+		}   
         // Runs Pool filter
         standardTile("POOL", "device.POOL", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'POOL', action: "poolUnknown", icon: "st.Health & Wellness.health2", backgroundColor: "#F2F200"
@@ -283,7 +281,7 @@ metadata {
 		} 
   
         //////////////////////////////////////////////////  
-        valueTile("schedule", "device.schedule", width: 6, height: 10, decoration: "flat", canChangeBackground: false) {
+        valueTile("scheduleTile", "device.scheduleTile", width: 6, height: 10, decoration: "flat", canChangeBackground: false) {
 			state "schedule", label:'${currentValue}', defaultState: true
 		}
         
@@ -317,7 +315,7 @@ metadata {
 			state "on", label: 'Time', action: "setdatetime", backgroundColor: "#ffffff",icon: "st.secondary.refresh-icon"
 		}
         
-        standardTile("addschedule", "device.addschedule", width: 1, height: 1, canChangeBackground: false) {
+        standardTile("addscheduleTile", "device.addschedule", width: 1, height: 1, canChangeBackground: false) {
 			state "add", label: '${currentValue}', action: "addSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.add-icon", nextState: "activated"
             state "activated", label: '${currentValue}', action: "addSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.add-icon", nextState: "add"
 		}   
@@ -327,7 +325,7 @@ metadata {
             state "off", label: '${currentValue}', nextState: "on"
         }
         
-        standardTile("delschedule", "device.delschedule", width: 1, height: 1, canChangeBackground: false) {
+        standardTile("delscheduleTile", "device.delschedule", width: 1, height: 1, canChangeBackground: false) {
 			state "delete", label: '${currentValue}', action: "delSchedule", backgroundColor: "#ffffff",icon: "st.custom.buttons.subtract-icon", nextState: "activated"
 		    state "activated", label: '${currentValue}', action: "delSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.subtract-icon", nextState: "delete"
         }   
@@ -345,9 +343,9 @@ metadata {
         "thermostatFullspa",
         "poolHeatMode", "spaHeatMode",
         "Pump 1","Pump 2",
-        "addschedule", "eggTimerSchedule", "delschedule",
+        "addscheduleTile", "eggTimerSchedule", "delscheduleTile",
         "eggTimerTile",        
-        "schedule"
+        "scheduleTile"
  		])
 	}
 }
@@ -356,9 +354,6 @@ def updated() {
     if (state.debug) log.info "######### UPDATED #########" 
     state.debug = debug
     state.debug_pump = debug_pump
-    
-    //state.uom = ""
-    //state.Cntr = true
     initialize()
     refresh()
 }
@@ -406,10 +401,8 @@ def updateSchedule() {
         sendEvent(name: "eggTimerSchedule", value: "Egg Timer\nID:${sch_id} Name:${sch_circuit}\nDuration ${egg_hour}:${egg_min}", isStateChange: "true")
     } else {
         //schedule
-        //log.debug "time = ${sch_start} ${sch_end}"
         if (!sch_start || !sch_end) {
             times = "Start: 0:0 End: 0:0"
-            //log.debug "times = ${times}"
         } else {
             Date startTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_start)  
             Date endTime = Date.parse("yyyy-MM-dd'T'HH:mm",sch_end)   
@@ -418,7 +411,6 @@ def updateSchedule() {
             String sch_endhh = get_hour(endTime)
             String sch_endmm = get_minute(endTime)
             times = "Start: ${sch_starthh}:${sch_startmm} End: ${sch_endhh}:${sch_endmm}"
-            //log.debug "times = ${times}"
         }   
         sendEvent(name: "eggTimerSchedule", value: "Schedule\nID:${sch_id} Name:${sch_circuit}\n${times}\n ${dow}", isStateChange: "true")
     }    
@@ -502,14 +494,14 @@ def addSchedule() {
        if (state.debug) log.info "schedule set id:${sch_id} to circuit:${sch_circuit_num}"    
        sendHubCommand(scheduleCircuit)
              
-       def addschedule = setFeature("/schedule/set/${sch_id}/${sch_circuit_num}/${sch_starthh}/${sch_startmm}/${sch_endhh}/${sch_endmm}/${sch_dow_num}")
+       def addsch = setFeature("/schedule/set/${sch_id}/${sch_circuit_num}/${sch_starthh}/${sch_startmm}/${sch_endhh}/${sch_endmm}/${sch_dow_num}")
        if (state.debug) log.info "schedule set id:${sch_id} to circuit:${sch_circuit_num} for time: start hour:${sch_starthh} start min:${sch_startmm} end hour:${sch_endhh} end min:${sch_endmm} day of the week number:${sch_dow_num}"
-       if (state.debug) log.info "addschedule = ${addschedule}"
-       sendHubCommand(addschedule)
+       if (state.debug) log.info "addsch = ${addsch}"
+       sendHubCommand(addsch)
        //sendEvent(name: "addschedule", isStateChange: "true", value: "add", descriptionText: "addsechedule was updated")
     }
     sendEvent(name: "addschedule", isStateChange: "true", value: "add", descriptionText: "addsechedule was updated")
-    action = setFeature("/schedule")
+    def action = setFeature("/schedule")
     sendHubCommand(action)
 }
 
@@ -538,14 +530,13 @@ def setdatetime() {
 // Day of week (NaN) should be one of: [1,2,4,8,16,32,64] [Sunday->Saturday]dst (0) should be 0 or 1" }
     if (!controllerTime) return
     Date newDate = Date.parse("yyyy-MM-dd'T'HH:mm",controllerTime)  
-    //log.debug "newDate = ${newDate}"
     String year = newDate.format('yy')
     String month = newDate.format('MM')
     String day = newDate.format('dd')
     String hour = newDate.format('HH')
     String minute = newDate.format('mm')
     String DayOfWeek = newDate.format('EE')
-    //log.info "state.dayValueMap = ${state.dayValueMap}, DayOfWeek = ${DayOfWeek}"
+
     def downum = state.dayValueMap[DayOfWeek]
     def action = setFeature("/datetime/set/time/${hour}/${minute}/date/${downum}/${day}/${month}/${year}/0")
     sendHubCommand(action)
@@ -578,18 +569,9 @@ def parse(String description) {
         def name = body.device.friendlyName
         state.version = "${name} Version\n${verMajor}.${verMinor}.${verPatch}"
         state.manufacturer = "By ${manufacturer}\n${modelDescription}"
-        //displayCntr()
-        //sendEvent(name: "poolCntr", value: state.version)
-       //state.Cntr = true
-        
-        //sendEvent(name: "addSchedule", value: "off", isStateChange: "true")
-        //sendEvent(name: "delSchedule", value: "off", isStateChange: "true")
-
         return null
     }    
-
-
-    
+   
     // process json messages
     def json = msg.data
     if (state.debug) log.warn "json = ${json}"
@@ -598,7 +580,6 @@ def parse(String description) {
     if (!json) return null
      
     // process each json key 
-    //def keys = json.keySet()
     json.keySet().each() {
       def key = it
       switch (key) {
@@ -610,7 +591,7 @@ def parse(String description) {
               break
         case "text":
               log.info "### parse : text ###"
-              log.warn "parse: text response: json = ${json}"
+              if (state.debug) log.warn "parse: text response: json = ${json}"
               if (state.debug) log.warn "Response: ${json.text}"
               if (state.debug) log.warn "Status: ${json.status}"
               if (state.debug) log.warn "value: ${json.value}"
@@ -675,7 +656,7 @@ def parse(String description) {
               sendEvent(name: "temperature", value: "${spaSetPoint}")
               break
         case "circuit":
-              log.info "### parse : circuits ###" 
+              if (state.debug) log.info "### parse : circuits ###" 
               def circuits = json.circuit
               if (state.debug) log.info "state.circuit = ${state.circuit}"           
               if (state.debug) log.info "******** circuits = \n${circuits} ************"
@@ -751,15 +732,18 @@ def parse(String description) {
               def int circuitSize = 0
               def space = ""
               def int i
-              
+              def active = 0
+              def ison = ""
               schedule.keySet().each {
                   space = ""
                   def event = schedule[it]
                   def ID = event.ID
                   def CIRCUIT = event.CIRCUIT
+                  def CN = event.CIRCUITNUM
                   def MODE = event.MODE
+                  def bytes = event.BYTES
+                  if (state.debug) log.debug "it:${it}-ID:${ID} CIRCUIT:${CN}-${CIRCUIT} MODE:${MODE} BYTES:${bytes}"
                   if (MODE == "Egg Timer") {
-                      //log.warn "Event is an Egg Timer"
                       def DURATION = event.DURATION
                       circuitSize = 16 - CIRCUIT.size()
                       for (i = 0; i <circuitSize; i++) {
@@ -767,25 +751,33 @@ def parse(String description) {
                       }
                       eggSchedule = eggSchedule + "${ID}${space}${CIRCUIT}${space}${DURATION}\n"
                   } else if (CIRCUIT != "NOT USED") {
-                      //log.warn "Event is a Schedule"
                       circuitSize = 16 - CIRCUIT.size()
                       for (i = 0; i <circuitSize; i++) {
                       	 space = space + " "
                       }
+                      
                 	  def START_TIME = event.START_TIME
                 	  def END_TIME = event.END_TIME
+                      ison = ""
+                      def between = timeOfDayIsBetween(START_TIME, END_TIME, new Date(), location.timeZone)
+    				  if (between) {
+                         if (state.debug) log.debug "current time is between ${START_TIME} and ${END_TIME} for ID ${ID} circuit ${CIRCUIT}"
+                         ison = "*"
+                         active = active + 1
+                      }
+                      
                 	  def DAYS = event.DAYS
                       def day_list = DAYS.split(" ")
                       def days = []
                       day_list.each {
                           days << it.substring(0,3)
                       }    
-                      fullSchedule = fullSchedule + "${ID}${space}${CIRCUIT}${space}${START_TIME}${space}${END_TIME}\nDAYS:${days}\n\n"
+                      fullSchedule = fullSchedule + "${ison}${ID}${space}${CIRCUIT}${space}${START_TIME}${space}${END_TIME}\nDAYS:${days}\n\n"
                   }
   			 }	
-             sendEvent(name: "schedule", value: "${fullSchedule}")
+             fullSchedule = fullSchedule + "* ${active} active schedule"
+             sendEvent(name: "scheduleTile", value: "${fullSchedule}")
              sendEvent(name: "eggTimerTile", value: "${eggSchedule}")
-             //updateSchedule()
            	 break
 		default:
             log.info "### parse : default ###"
@@ -807,7 +799,7 @@ def setFeature(query) {
         dni
 	)
     
-    log.info "setFeature query: ${query}\npoolAction =\n${poolAction}"
+    if (state.debug) log.info "setFeature query: ${query}\npoolAction =\n${poolAction}"
 	return poolAction
 }
 
@@ -897,7 +889,7 @@ def spaModeToggle() {
     def mode = device.currentValue("spaMode")
     def num = ""
     def value = ""
-    //log.info "mode = ${mode}"    
+    if (state.debug) log.info "mode = ${mode}"    
     switch (mode) {
     	case "Off":
         	num = "1"
@@ -925,7 +917,7 @@ def spaModeToggle() {
 }
 
 def displayCntr() {
-    log.info "state.Cntr = ${state.Cntr}"
+    if (state.debug) log.info "state.Cntr = ${state.Cntr}"
     if (state.Cntr) {
         sendEvent(name:"poolCntr", value: state.version, isStateChange: "true")
         state.Cntr = true
@@ -943,42 +935,42 @@ def Toggle(device) {
 
 def spaToggle() {
     // turns spa heater on/off
-	log.error "Executing 'spaToggle'"
+	log.warn "Executing 'spaToggle'"
     Toggle('SPA')
 }
 
 def blowerToggle() {
-	log.error "Executing 'blowerToggle'"  
+	log.warn "Executing 'blowerToggle'"  
     Toggle('AIR BLOWER')
 }
 
 def poolLightToggle() {
-	log.error "Executing 'poolLightToggle'"
+	log.warn "Executing 'poolLightToggle'"
     Toggle('POOL LIGHT')
 }
 
 def spaLightToggle() {
-	log.error "Executing 'spaLightToogle'"
+	log.warn "Executing 'spaLightToogle'"
     Toggle('SPA LIGHT')
 }
 
 def cleanerToggle() {
-	log.error "Executing 'cleanerToogle'"
+	log.warn "Executing 'cleanerToogle'"
     Toggle('CLEANER')
 }
 
 def poolToggle() {
-	log.error "Executing 'poolToogle'"
+	log.warn "Executing 'poolToogle'"
     Toggle('POOL')
 }
 
 def highspeedToggle() {
-	log.error "Executing 'highspeedToggle'"
+	log.warn "Executing 'highspeedToggle'"
     Toggle('HIGH SPEED')
 }
 
 def spillWayToggle() {
-	log.error "Executing 'spillWayToogle'"
+	log.warn "Executing 'spillWayToogle'"
     Toggle('SPILLWAY')
 }
 
