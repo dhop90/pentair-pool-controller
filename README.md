@@ -29,16 +29,28 @@ A Smartthings device designed to interface with a nodejs-poolControlller instanc
 
 # iPhone layout:
 
-<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6507.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6508.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6509.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6510.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6511.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6516.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6517.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6518.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6519.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6520.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_6521.PNG" height="400"> 
 
 # Preferences:
 
- <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6358.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6359.PNG" height="400" ><img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6360.PNG" height="400"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_6361.PNG" height="400">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1121.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1122.PNG" height="400">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1123.PNG" height="400"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/master/images/IMG_1124.PNG" height="400">
 
 
 # iPad layout:
 
-<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1110.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1111.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1112.PNG" height="300"> <img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1113.PNG" height="300">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1116.PNG" height="300"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1117.PNG" height="300"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1118.PNG" height="300"> 
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1119.PNG" height="300">
+<img src="https://github.com/dhop90/pentair-pool-controller/blob/gh-pages/images/IMG_1120.PNG" height="300">
 
 ***
 
