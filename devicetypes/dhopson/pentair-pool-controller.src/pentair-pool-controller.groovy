@@ -435,14 +435,14 @@ metadata {
         "POOL LIGHT", "SPA LIGHT", "ALL LIGHTS", 
         "ALLPUMPS", "HIGH SPEED", "CLEANER", 
         "SPILLWAY", "AIR BLOWER", "POOL", 
-        
+        "spaHeatMode","poolHeatMode",
         "thermostatFullspa",       
         "spaDown", "SPA", "spaUp",
         
         "thermostatFullpool",
         "poolDown", "POOLHEAT", "poolUp",
 
-        "spaHeatMode","poolHeatMode",
+        //"spaHeatMode","poolHeatMode",
         "Pump 1","Pump 2",        
         "eggTimerSchedule","addscheduleTile","delscheduleTile",
         "eggTimerTile",
@@ -559,7 +559,7 @@ def parse(String description) {
                   state.shm = json.value
                   state.shmStr = json.status
 
-                  sendEvent(name: "spathermostatOperatingState" , value: "${state.shmStr}") 
+                  //sendEvent(name: "spathermostatOperatingState" , value: "${state.shmStr}") 
                   sendEvent(name: "spaHeatMode", value: "${state.shmStr}")
                   sendEvent(name: "spaHeatModeBottom", value: "${state.shmStr}")
                          
@@ -568,7 +568,7 @@ def parse(String description) {
                   state.phm = json.value
                   state.phmStr = json.status
 
-                  sendEvent(name: "poolthermostatOperatingState" , value: "${state.phmStr}")               
+                  //sendEvent(name: "poolthermostatOperatingState" , value: "${state.phmStr}")               
                   sendEvent(name: "poolHeatMode", value: "${state.phmStr}")
                   sendEvent(name: "poolHeatModeBottom", value: "${state.phmStr}")
                   
