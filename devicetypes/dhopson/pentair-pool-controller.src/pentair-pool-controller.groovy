@@ -108,27 +108,7 @@ metadata {
             input name: "Thursday", type: "bool", title: "Schedule Thursday?", description: "Should the task be scheduled for this day?", required: false
             input name: "Friday", type: "bool", title: "Schedule Friday?", description: "Should the task be scheduled for this day?", required: false
             input name: "Saturday", type: "bool", title: "Schedule Saturday?", description: "Should the task be scheduled for this day?", required: false
-            input name: "Sunday", type: "bool", title: "Schedule Sunday?", description: "Should the task be scheduled for this day?", required: false 
-            //input name: "debug", type: "bool", title: "Debug?", description: "Enable Debug?", required: false
-            /*
-            input name: "adebug", type: "enum", title: "Debug", description: "Which feature should be debugged", required: false, multiple:false, refreshAfterSelection:false, 
-               options:[
-                    "ALL",
-                    "SPA",
-        			"AIR BLOWER",
-        			"POOL LIGHT",
-        			"SPA LIGHT",
-        			"CLEANER",
-        			"POOL",
-        			"HIGH SPEED",
-        			"SPILLWAY",
-                    "SCHEDULE",
-                    "EGG TIMER",
-                    "PARSE",
-                    "TEMPATURE",
-                    "PUMP",
-                    "CIRCUIT"]
-             */       
+            input name: "Sunday", type: "bool", title: "Schedule Sunday?", description: "Should the task be scheduled for this day?", required: false        
         }
        
       }  
@@ -250,7 +230,7 @@ metadata {
 			state "off", label: 'AIR BLOWER', action: "blowerToggle", icon: "st.vents.vent", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'AIR BLOWER', action: "blowerToggle", icon: "st.vents.vent-open", backgroundColor: "#79b821", nextState: "off"
 		}   
-        // Runs Pool filter
+        // Runs Pool filter & if phm > 0 then pool is heated
         standardTile("POOL", "device.POOL", width: 2, height: 2, canChangeBackground: true) {
         	state "unknown", label: 'POOL', action: "poolUnknown", icon: "st.Health & Wellness.health2", backgroundColor: "#F2F200"
 			state "off", label: 'POOL', action: "poolToggle", icon: "st.Health & Wellness.health2", backgroundColor: "#ffffff", nextState: "on"
@@ -291,7 +271,7 @@ metadata {
 			state "push", label: 'Up', action: "pooltempUp",icon: "st.thermostat.thermostat-up",nextState: "up", backgroundColor: "#cccccc"
     	} 
         
-        // spaHeatMode/poolHeatMode
+        // spaHeatMode/poolHeatMode phm/shm
         standardTile("poolHeatMode", "device.poolHeatMode", width:3, height: 2, canChangeBackground: true) {
             state "Off", label: '${name}', action: "poolModeToggle", backgroundColor: "#ffffff", nextState: "Heater", icon: "st.Health & Wellness.health2"
 			state "Heater", label: '${name}', action: "poolModeToggle", backgroundColor: "#00a0dc", nextState: "Solar Pref", icon: "st.Health & Wellness.health2"
@@ -499,7 +479,7 @@ def parse(String description) {
         return evt
     }    
    
-    // process json messages
+    // assume msg is json and not xml message, process json messages
     def json = msg.data
     
     // return if no json, return
@@ -515,12 +495,12 @@ def parse(String description) {
 
       switch (key) {
         case "value":
-              loginfo "processing value"
-              logwarn "      value = ${json.value}"
+              log.info "processing value"
+              log.warn "      value = ${json.value}"
               break
         case "status":
-              loginfo "processing status"
-              logwarn "      status = ${json.status}"
+              log.info "processing status"
+              log.warn "      status = ${json.status}"
               break
         case "text":
               log.info "processing text"
@@ -529,57 +509,64 @@ def parse(String description) {
               log.warn "value: ${json.value}"
               
               if (json.text.contains("POOL LIGHT")) { 
-                  loginfo "status = POOL LIGHT ${json.status}"
+                  log.info "status = POOL LIGHT ${json.status}"
                   sendEvent(name: "POOL LIGHT", value: "${json.status}")
                   adjustAll("POOL LIGHT", "ALL LIGHTS", json.status, "SPA LIGHT") 
                   
               } else if (json.text.contains("SPA LIGHT")) {
-                  loginfo "status = SPA LIGHT ${json.status}"
+                  log.info "status = SPA LIGHT ${json.status}"
                   sendEvent(name: "SPA LIGHT", value: "${json.status}")
                   adjustAll("SPA LIGHT", "ALL LIGHTS", json.status, "POOL LIGHT") 
                   
               } else if (json.text.contains("CLEANER")) {
-                  loginfo "status = CLEANER ${json.status}"
+                  log.info "status = CLEANER ${json.status}"
                   sendEvent(name: "CLEANER", value: "${json.status}")
                   adjustAll("CLEANER", "ALLPUMPS", json.status, "HIGH SPEED")
                   adjustAll("CLEANER", "CLEANWAY", json.status, "SPILLWAY")
                   
               } else if (json.text.contains("HIGH SPEED")) {
-                  loginfo "status = HIGH SPEED ${json.status}"
+                  log.info "status = HIGH SPEED ${json.status}"
                   adjustAll("HIGH SPEED", "ALLPUMPS", json.status, "CLEANER")
                   sendEvent(name: "HIGH SPEED", value: "${json.status}")
                                    
               } else if (json.text.contains("SPILLWAY")) {
-                  loginfo "status = SPILLWAY ${json.status}"
+                  log.info "status = SPILLWAY ${json.status}"
                   adjustAll("SPILLWAY", "CLEANWAY", json.status, "CLEANER")
                   sendEvent(name: "SPILLWAY", value: "${json.status}")
-                  //set spa heat setpoint to 103 sent to controller
-              } else if ((json.text.contains("set spa heat mode to") || json.text.contains("update spa heat set point")) || json.text.contains("set spa heat setpoint")) { 
-                  loginfo "spa heat modified"
+                 
+              } else if ((json.text.contains("Request to set spa heat mode to") || json.text.contains("User request to update spa heat set point")) || json.text.contains("Request to set spa heat setpoint")) {    //|| json.text.contains("set spa heat setpoint")) { 
+                  log.info "spa heat modified"
                   state.shm = json.value
                   state.shmStr = json.status
+                  state.spaSetPoint = json.value
 
-                  //sendEvent(name: "spathermostatOperatingState" , value: "${state.shmStr}") 
                   sendEvent(name: "spaHeatMode", value: "${state.shmStr}")
                   sendEvent(name: "spaHeatModeBottom", value: "${state.shmStr}")
+                  sendEvent(name: "device.spatemperature", value: "${state.spaSetPoint}")
                          
-              } else if ((json.text.contains("set pool heat mode to") || json.text.contains("update pool heat set point")) || json.text.contains("set pool heat setpoint")) {
+              } else if ((json.text.contains("Request to set pool heat mode to") || json.text.contains("User request to update pool heat set point")) || json.text.contains("Request to set pool heat setpoint")) {   //|| json.text.contains("set pool heat setpoint")) {
                   log.info "pool heat modified"
                   state.phm = json.value
                   state.phmStr = json.status
-
-                  //sendEvent(name: "poolthermostatOperatingState" , value: "${state.phmStr}")               
+                  state.poolSetPoint = json.value
+            
                   sendEvent(name: "poolHeatMode", value: "${state.phmStr}")
                   sendEvent(name: "poolHeatModeBottom", value: "${state.phmStr}")
-                  
-              } else if (json.text.contains("set spa heat setpoint")) {
-                  loginfo "spa heat setpoint"
-                  sendEvent(name: "device.spatemperature", value: "${json.value}")
-                
-              } else if (json.text.contains("set pool heat setpoint")) {
-                  loginfo "pool heat setpoint"
-                  sendEvent(name: "device.pooltemperature", value: "${json.value}")   
-                  
+                  sendEvent(name: "device.pooltemperature", value: "${state.poolSetPoint}")
+              /*    
+              } else if (json.text.contains("Request to set spa heat setpoint")) {
+                  log.info "spa heat setpoint"
+                  state.spaSetPoint = json.value
+                  state.shmStr = json.status
+                  sendEvent(name: "device.spatemperature", value: "${state.spaSetPoint}")
+                  sendEvent(name: "spaHeatModeBottom", value: "${state.shmStr}")
+              } else if (json.text.contains("Request to set pool heat setpoint")) {
+                  log.info "pool heat setpoint"
+                  state.poolSetPoint = json.value
+                  state.phmStr = json.status
+                  sendEvent(name: "device.pooltemperature", value: "${state.poolSetPoint}")
+                  sendEvent(name: "poolHeatModeBottom", value: "${state.phmStr}")
+              */    
               } else if (json.text.contains("toggle SPA to")) {
                   log.info "SPA toggle"
                   def spaheatvalue = json.value?.is(0) ? "idle" : "heating"
@@ -591,10 +578,10 @@ def parse(String description) {
                   }
                   
               } else if (json.text.contains("toggle POOL to")) {
-                  loginfo "POOL toggle"
+                  log.info "POOL toggle"
                   sendEvent(name: "POOL", value: "${json.status}")  
               } else if (json.text.contains("BLOWER")) {
-                  loginfo "status = BLOWER ${json.status}"
+                  log.info "status = BLOWER ${json.status}"
                   sendEvent(name: "AIR BLOWER", value: "${json.status}")
               }
               break
@@ -609,7 +596,7 @@ def parse(String description) {
         case "heat": 
               loginfo "### parse : heat - merged with temperature - no break ###"
         case "temperature":
-              loginfo "processing temperature"
+              log.info "processing temperature"
               def temperatures = json.temperature
               loginfo "temperatures = ${temperatures}"
               def poolTemp = temperatures.poolTemp
@@ -623,22 +610,19 @@ def parse(String description) {
               state.poolSetPoint = temperatures.poolSetPoint
               state.phmStr = temperatures.poolHeatModeStr  
               state.phm = temperatures.poolHeatMode
-              log.info "poolSetPoint = ${state.poolSetPoint}"
-              log.debug "state.phm = ${state.phm}"
-              log.debug "state.phmStr = ${state.phmStr}"
-              def poolHeatModeStr = temperatures.poolHeatModeStr  
+              loginfo "poolSetPoint = ${state.poolSetPoint}"
+              logdebug "state.phm = ${state.phm}"
+              logdebug "state.phmStr = ${state.phmStr}"
               
               //spa
               state.spaSetPoint = temperatures.spaSetPoint
               state.shmStr = temperatures.spaHeatModeStr
               state.shm = temperatures.spaHeatMode
               loginfo "spaSetPoint = ${state.spaSetPoint}"
-              log.debug "state.shm = ${state.shm}"
-              log.debug "state.shmStr = ${state.shmStr}"
-              def spaHeatModeStr = temperatures.spaHeatModeStr
-              
-              
-              def heaterActive = temperatures.heaterActive
+              logdebug "state.shm = ${state.shm}"
+              logdebug "state.shmStr = ${state.shmStr}"
+                          
+              //def heaterActive = temperatures.heaterActive
  
               //sendEvents for Temperature 
               sendEvent(name: "poolTemp", value: "${poolTemp}")
@@ -647,14 +631,15 @@ def parse(String description) {
               sendEvent(name: "freeze", value: "${freeze}")
               
               //sendEvents for Spa
-              sendEvent(name: "spaHeatMode", value: "${spaHeatModeStr}")
-              sendEvent(name: "spaHeatModeBottom", value: "${spaHeatModeStr}")
+              if (state.shm > 0)
+                 sendEvent(name: "spaHeatMode", value: "${state.shmStr}")
+              sendEvent(name: "spaHeatModeBottom", value: "${state.shmStr}")
               sendEvent(name: "spatemperature", value: "${state.spaSetPoint}")
           
               //sendEvents for Pool
               if (state.phm > 0)
-              	  sendEvent(name: "poolHeatMode", value: "${poolHeatModeStr}")
-              sendEvent(name: "poolHeatModeBottom", value: "${poolHeatModeStr}")
+              	  sendEvent(name: "poolHeatMode", value: "${state.phmStr}")
+              sendEvent(name: "poolHeatModeBottom", value: "${state.phmStr}")
               sendEvent(name: "pooltemperature", value: "${state.poolSetPoint}")
                             
               break
@@ -676,10 +661,10 @@ def parse(String description) {
               state.circuit.keySet().each {
                   def num = state.circuit[it]
                   def status = circuits."${num}".status
-                  log.debug "${it}: ciruit ${num} status = ${status}"
+                  logdebug "${it}: ciruit ${num} status = ${status}"
                   sendEvent(name: "${it}", value: status?.is(0) ? "off" : "on")
                   if (it == "SPA") {
-                      log.debug "it = SPA"
+                      logdebug "it = SPA"
                       if ((state.shm > 0) && (status == 1)) {
                             sendEvent(name: "spathermostatOperatingState", value: "${state.spaTemp}° heating")
                        } else {
@@ -688,7 +673,7 @@ def parse(String description) {
                             
                   }
                   if (it == "POOL") {
-                       log.debug "it = POOL"                     
+                       logdebug "it = POOL"                     
                        if ((state.phm > 0) && (status == 1)) {
                             sendEvent(name: "poolthermostatOperatingState", value: "${state.poolTemp}° heating")   
                        } else {
@@ -834,6 +819,11 @@ def logdebug(msg) {
 def logwarn(msg) {
     if (state.debug)
 	    log.warn msg
+}
+
+def logerror(msg) {
+    if (state.debug)
+	    log.error msg
 }
 
 // Init routines
@@ -1211,7 +1201,6 @@ def displayCntr() {
     } else {  
         sendEvent(name:"poolCntr", value: state.manufacturer, isStateChange: "true")  
     }   
-    //state.Cntr = !state.Cntr
 }
 
 def adjustAll(feature, Allfeature, status, otherFeature) {
@@ -1288,12 +1277,7 @@ def poolLightToggle() {
 
 def allLightToggle() {
 	logwarn "Executing 'allLightToggle'"
-    //def poollightstate = device.currentValue("POOL LIGHT")
-    //def spalightstate = device.currentValue("SPA LIGHT")
     def allLightstate = device.currentValue("ALL LIGHTS")
-    //log.debug "poollightstate = ${poollightstate}"
-    //log.debug "spalightstate = ${spalightstate}"
-    //log.debug "allLightstate = ${allLightstate}"
 
     def value 
     
@@ -1301,7 +1285,6 @@ def allLightToggle() {
         value = 0
     else
         value = 1
-    //log.debug "value = ${value}"
     
     def poolnum = state.circuit["POOL LIGHT"]
     def spanum = state.circuit["SPA LIGHT"]    
