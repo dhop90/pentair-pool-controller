@@ -128,10 +128,10 @@ metadata {
             state "off", label:'Debug ${currentValue}', action:"set_debug", icon:"st.samsung.da.RC_ic_power", nextState: "on", backgroundColor: "#ffffff", defaultState: true
     	}  
         valueTile("poolspace", "device.poolspace", width: 4, height: 2, decoration: "flat", canChangeBackground: false) {
-            state "val", label:'POOL', action:"", defaultState: true, icon: "st.Health & Wellness.health2"
+            state "val", label:'POOL MODE ->', action:"", defaultState: true, icon: "st.Health & Wellness.health2"
 		} 
         valueTile("spaspace", "device.spaspace", width: 4, height: 2, decoration: "flat", canChangeBackground: false) {
-            state "val", label:'SPA', action:"", defaultState: true, icon: "st.Bath.bath4"
+            state "val", label:'SPA MODE ->', action:"", defaultState: true, icon: "st.Bath.bath4"
 		} 
         
         valueTile("timedate", "device.timedate", width: 3, height: 2, decoration: "flat", canChangeBackground: false) {
@@ -393,7 +393,7 @@ metadata {
         valueTile("scheduleTile", "device.scheduleTile", width: 6, height: 8, decoration: "flat", canChangeBackground: false) {
 			state "schedule", label:'${currentValue}', defaultState: true
 		}        
-        valueTile("eggTimerTile", "device.eggTimerTile", width: 6, height: 8, decoration: "flat", canChangeBackground: false) {
+        valueTile("eggTimerTile", "device.eggTimerTile", width: 6, height: 6, decoration: "flat", canChangeBackground: false) {
 			state "eggTimerTile", label:'${currentValue}', defaultState: true
 		}  
       
@@ -416,7 +416,7 @@ metadata {
 
         details([
         "poolCntr", "timedate",
-        "refresh", "config", "freeze", 
+        "config", "refresh", "freeze", 
         "airTemp", "poolTemp", "spaTemp",
         
         "POOL LIGHT", "SPA LIGHT", "ALL LIGHTS", 
@@ -436,7 +436,7 @@ metadata {
         "eggTimerSchedule","addscheduleTile","delscheduleTile",
         "eggTimerTile",
         "scheduleTile", 
-        "debug"
+        "debug", "refresh", "config"
  		])
 	}
 }
