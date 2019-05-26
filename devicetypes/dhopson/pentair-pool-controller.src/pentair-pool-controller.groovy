@@ -14,7 +14,12 @@
  * Adapted from (name: "Pentair Controller", namespace: "michaelusner", author: "Michael Usner", oauth: true)
  */
  
+// API calls in server.js file on https://github.com/tagyoureit/nodejs-poolController/blob/b3d31a94daf486058d9a8d8043d9039d3a459487/src/lib/comms/server.js
+// curl -X GET http://user:pass@pi-pool:3000/schedule | jq '.schedule | ."7"'
+// curl -X GET http://user:pass@pi-pool:3000/schedule/set/7/3/21/00/22/00/127
+// curl -X GET http://user:pass@pi-pool:3000/schedule/set/id/7/circuit/3
  
+
 metadata {
 	definition (name: "Pentair Pool Controller", namespace: "dhopson", author: "David Hopson", oauth: true) {
         //capability
@@ -253,7 +258,7 @@ metadata {
 			state "off", label: 'CLEANER', action: "cleanerToggle", icon: "st.Weather.weather1", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'CLEANER', action: "cleanerToggle", icon: "st.Weather.weather1", backgroundColor: "#79b821", nextState: "off"
 		}
-        standardTile("ALLPUMPS", "device.ALLPUMPS", width: 2, height: 2, canChangeBackground: true) {
+        standardTile("ALL PUMPS", "device.ALL PUMPS", width: 2, height: 2, canChangeBackground: true) {
 			state "off", label: 'ALL PUMPS', action: "allPumpsToggle", icon: "st.Appliances.appliances2", backgroundColor: "#ffffff", nextState: "on"
 			state "on", label: 'ALL PUMPS', action: "allPumpsToggle", icon: "st.Appliances.appliances2", backgroundColor: "#79b821", nextState: "off"
 		}
@@ -381,7 +386,8 @@ metadata {
                 attributeState("Solar only", label:'${name}')
     		}
             
-		}   
+		}  
+        
         multiAttributeTile(name:"thermostatFullpool", type:"generic", width:6, height:4) {
         	// center
     		tileAttribute("device.poolTemp", key: "PRIMARY_CONTROL") {
@@ -440,10 +446,10 @@ metadata {
             
 		} 
         
-        controlTile("poolLevelSliderControl", "device.poolTemp4", "slider", height: 2, width: 2, range:"(70..105)") {
+        controlTile("poolLevelSliderControl", "device.poolTemp4", "slider", height: 2, width: 2, range:"(20..105)", inactiveLabel: false, label: "hello") {
            state "pooltemperature", action:"poolSetRangedLevel"
         }
-        controlTile("spaLevelSliderControl", "device.spaTemp4", "slider", height: 2, width: 2, range:"(70..105)") {
+        controlTile("spaLevelSliderControl", "device.spaTemp4", "slider", height: 2, width: 2, range:"(20..105)") {
            state "spatemperature", action:"spaSetRangedLevel"
         }
         //////////////////////////////////////////////////         
@@ -470,7 +476,7 @@ metadata {
 		    state "activated", label: '${currentValue}', action: "delSchedule", backgroundColor: "#cccccc",icon: "st.custom.buttons.subtract-icon", nextState: "delete"
         }   
         
-        main(["CLEANWAY"])
+        main(["poolTemp"])
 
         details([
         "poolCntr", "timedate",
@@ -478,28 +484,18 @@ metadata {
         "airTemp", "poolTemp", "spaTemp",
         
         "ALL LIGHTS", "POOL LIGHT", "SPA LIGHT",
-        "ALLPUMPS", "HIGH SPEED", "CLEANER", 
-        "SPILLWAY", "AIR BLOWER", "POOL", 
-
-        "spaspace","spaHeatMode",//"spaTemp",        
-        //"thermostatFullspa",
-        "spaLevelSliderControl",
-        //"spaDown", 
-        "spaTemp4",
-        "SPA", 
-        //"spaUp",
         
-        "poolspace","poolHeatMode",//"poolTemp",
-
-        "poolLevelSliderControl",
-        //"thermostatFullpool",
-        "poolTemp4",
-        //"poolDown", 
-        "POOLHEAT", 
-        //"poolUp",
-
-
-        //"spaHeatMode","poolHeatMode",
+        "spaspace","spaHeatMode",      
+        
+        "spaLevelSliderControl","spaTemp4","SPA", 
+        
+        "ALL PUMPS", "HIGH SPEED", "CLEANER", 
+        "SPILLWAY", "AIR BLOWER", "POOL", 
+        
+        "poolspace","poolHeatMode",
+        
+        "poolLevelSliderControl","poolTemp4","POOLHEAT", 
+        
         "Pump 1","Pump 2",        
         "eggTimerSchedule","addscheduleTile","delscheduleTile",
         "eggTimerTile",
@@ -511,11 +507,51 @@ metadata {
 }
 
 // parse routines
+
+def parse(String description) {   
+	log.debug "------------- Parse -------------"         
+    if (state.DBG == "CONFIG") state.DEBUG = state.DEBUG = 0
+    
+    def json = parseLanMessage(description).data
+    if (!json) {
+       logerror "parsed lan message was nil"
+       def evt = createEvent(name: "refresh", isStateChange: "true", value: "Idle")
+       return evt
+    } else {
+        loginfo "json = ${json}"
+        logdebug("parse - config = ${json.config}")
+        logdebug("parse - circuit = ${json.circuit}")
+    	//state.includeSolar = mesg.config.equipment.solar.installed == 1
+    	//state.includeChem = mesg.config.equipment.intellichem.installed == 1
+    	//state.includeChlor = mesg.config.equipment.chlorinator.installed == 1
+    	//state.includeSpa = mesg.config.equipment.spa.installed == 1       
+    	//state.controller = mesg.config.equipment.controller
+    	//state.circuitHudeAux = mesg.config.equipment.circuit.hideAux
+    	//state.numCircuits =  mesg.config.equipment.circuit.nonLightCircuit.size() + mesg.config.equipment.circuit.lightCircuit.size()
+    	//state.nonLightCircuits = mesg.config.equipment.circuit.nonLightCircuit
+    	//state.lightCircuits = mesg.config.equipment.circuit.lightCircuit
+    	state.pumps = json.pump        
+    	state.circuitData = json.circuit
+        state.temperature = json.temperature
+        state.time = json.time
+    	state.config = true
+        state.uom = json.UOM.UOMStr
+
+        processTemperatures(state.temperature)
+        processCircuits(state.circuitData)
+        processTime(state.time)
+        processPumps(state.pumps)
+        processSchedule(json.schedule)
+        processConfig(json.config)
+    }
+    state.DEBUG = 0
+} 
+
 def parseAction(physicalgraph.device.HubResponse hubResponse) {
    log.debug "------------- parseAction -------------"  
    if (state.DBG == "ACTION") state.DEBUG = 1
    def json = hubResponse.json
-   log.debug "json = ${json}"
+   logdebug "json = ${json}"
    
    if (json) {
       loginfo "processing text"
@@ -526,22 +562,18 @@ def parseAction(physicalgraph.device.HubResponse hubResponse) {
       if (json.text.contains("POOL LIGHT")) { 
           loginfo "status = POOL LIGHT ${json.status}"
           sendEvent(name: "POOL LIGHT", value: "${json.status}")
-          adjustAll("POOL LIGHT", "ALL LIGHTS", json.status, "SPA LIGHT") 
                   
       } else if (json.text.contains("SPA LIGHT")) {
           loginfo "status = SPA LIGHT ${json.status}"
           sendEvent(name: "SPA LIGHT", value: "${json.status}")
-          adjustAll("SPA LIGHT", "ALL LIGHTS", json.status, "POOL LIGHT") 
                   
       } else if (json.text.contains("CLEANER")) {
           log.info "STATUS = CLEANER ${json.status}"
           sendEvent(name: "CLEANER", value: "${json.status}")
-          adjustAll("CLEANER", "ALLPUMPS", json.status, "HIGH SPEED")
                   
       } else if (json.text.contains("HIGH SPEED")) {
           log.info "STATUS = HIGH SPEED ${json.status}"
           sendEvent(name: "HIGH SPEED", value: "${json.status}")
-          adjustAll("HIGH SPEED", "ALLPUMPS", json.status, "CLEANER")
                                    
       } else if (json.text.contains("SPILLWAY")) {
           loginfo "status = SPILLWAY ${json.status}"
@@ -558,7 +590,7 @@ def parseAction(physicalgraph.device.HubResponse hubResponse) {
           sendEvent(name: "device.spatemperature", value: "${state.spaSetPoint}")
                          
       } else if ((json.text.contains("Request to set pool heat mode to") || json.text.contains("User request to update pool heat set point")) || json.text.contains("Request to set pool heat setpoint")) {   //|| json.text.contains("set pool heat setpoint")) {
-          loginfo "pool heat modified"
+          log.info "pool heat modified"
           state.phm = json.value
           state.phmStr = json.status
           state.poolSetPoint = json.value
@@ -587,11 +619,14 @@ def parseAction(physicalgraph.device.HubResponse hubResponse) {
        }
    }
    state.DEBUG = 0
+   setAllPumps()
+   setAllLights()
 }
 
 def parseDevice(physicalgraph.device.HubResponse hubResponse) {
-    if (state.DBG == "CONFIG") state.DEBUG = 1
     log.debug "------------- parseDevice -------------"  
+    if (state.DBG == "CONFIG") state.DEBUG = 1
+
     def msg = hubResponse.xml
     logdebug "msg = ${msg}"
     if (msg) {
@@ -612,7 +647,7 @@ def parseDevice(physicalgraph.device.HubResponse hubResponse) {
 
         def dbug = state.debug?.is(true) ? "on" : "off"
 
-        state.version = "${friendlyName} Version\n${verMajor}.${verMinor}.${verPatch}\n Debug is ${dbug}" 
+        state.version = "${friendlyName} Version\n${verMajor}.${verMinor}.${verPatch}\n Debug ${dbug}" 
         state.manufacturer = "By ${manufacturer}\n${modelDescription}"
         logdebug "version = ${state.version}"
         logdebug "manufacturer = ${state.manufacturer}"
@@ -624,9 +659,9 @@ def parseDevice(physicalgraph.device.HubResponse hubResponse) {
 }
 
 def parseSchedule(physicalgraph.device.HubResponse hubResponse) {
+    log.debug "------------- parseSchedule -------------"   
     if (state.DBG == "SCHEDULE") state.DEBUG = 1
-    log.debug "------------- parseSchedule -------------"         
-
+      
     def json = hubResponse.json
     logdebug "parseSchedule json = ${json}"
     if (!json) {
@@ -639,9 +674,9 @@ def parseSchedule(physicalgraph.device.HubResponse hubResponse) {
 }
 
 def parseCircuit(physicalgraph.device.HubResponse hubResponse) {
+    log.debug "------------- parseCircuit -------------"  
     if (state.DBG == "CIRCUITS") state.DEBUG = 1
-    log.debug "------------- parseCircuit -------------"         
-
+      
     def json = hubResponse.json
     logdebug "parseCircuit json = ${json}"
     if (!json) {
@@ -653,51 +688,13 @@ def parseCircuit(physicalgraph.device.HubResponse hubResponse) {
     state.DEBUG = 0
 }
 
-def parse(String description) {   
-    if (state.DBG == "CONFIG") state.DEBUG = state.DEBUG = 0
-	log.debug "------------- Parse -------------"         
-
-    def json = parseLanMessage(description).data
-    if (!json) {
-       logerror "parsed lan message was nil"
-       def evt = createEvent(name: "refresh", isStateChange: "true", value: "Idle")
-       return evt
-    } else {
-        loginfo "json = ${json}"
-        logdebug("parse - config=${json.config}")
-        logdebug("parse - circuit=${json.circuit}")
-    	//state.includeSolar = mesg.config.equipment.solar.installed == 1
-    	//state.includeChem = mesg.config.equipment.intellichem.installed == 1
-    	//state.includeChlor = mesg.config.equipment.chlorinator.installed == 1
-    	//state.includeSpa = mesg.config.equipment.spa.installed == 1       
-    	//state.controller = mesg.config.equipment.controller
-    	//state.circuitHudeAux = mesg.config.equipment.circuit.hideAux
-    	//state.numCircuits =  mesg.config.equipment.circuit.nonLightCircuit.size() + mesg.config.equipment.circuit.lightCircuit.size()
-    	//state.nonLightCircuits = mesg.config.equipment.circuit.nonLightCircuit
-    	//state.lightCircuits = mesg.config.equipment.circuit.lightCircuit
-    	state.pumps = json.pump        
-    	state.circuitData = json.circuit
-        state.temperature = json.temperature
-        state.time = json.time
-    	state.config=true
-        state.uom = json.UOM.UOMStr
-
-        processTemperatures(state.temperature)
-        processCircuits(state.circuitData)
-        processTime(state.time)
-        processPumps(state.pumps)
-        processSchedule(json.schedule)
-        processConfig(json.config)
-    }
-    state.DEBUG = 0
-}  
-
 // process routines
 
 def processTemperatures(temperatures) {
+    log.info "processing temperature"  
     if (state.DBG == "TEMPERATURES") state.DEBUG = 1
-    loginfo "processing temperature"  
-    //loginfo "temperatures = ${temperatures}"
+
+    loginfo "temperatures = ${temperatures}"
     if (state.DEBUG) {
     	temperatures.keySet().each {
             def item = temperatures[it]
@@ -705,11 +702,12 @@ def processTemperatures(temperatures) {
         }
     }    
 
-
-    def poolTemp = state.SPAstate? temperatures.poolLastKnownTemperature : temperatures.poolTemp
-    def spaTemp = state.POOLstate? temperatures.spaLastKnownTemperature : temperatures.spaTemp
+    loginfo "state.SPAstate = ${state.SPAstate}"
+    loginfo "state.POOLstate = ${state.POOLstate}"
     
-    //def spaTemp = temperatures.spaTemp
+    def poolTemp = state.SPAstate?.is(1) ? temperatures.poolLastKnownTemperature : temperatures.poolTemp
+    def spaTemp = state.POOLstate?.is(1) ? temperatures.spaLastKnownTemperature : temperatures.spaTemp
+ 
     state.spaTemp = spaTemp
     state.poolTemp = poolTemp
     def airTemp = temperatures.airTemp
@@ -724,6 +722,9 @@ def processTemperatures(temperatures) {
     state.spaSetPoint = temperatures.spaSetPoint
     state.shmStr = temperatures.spaHeatModeStr
     state.shm = temperatures.spaHeatMode
+    
+    loginfo "state.phm = ${state.phm}"
+    loginfo "state.shm = ${state.shm}"
  
     //sendEvents for Temperature 
     sendEvent(name: "poolTemp", value: "${poolTemp}")
@@ -746,8 +747,9 @@ def processTemperatures(temperatures) {
 }   
 
 def processCircuits(circuits) {
+    log.info "processing circuit" 
     if (state.DBG == "CIRCUITS") state.DEBUG = 1
-    log.info "processing circuit"   
+
     loginfo "circuits = ${circuits}"           
               
     circuits.keySet().each {
@@ -782,15 +784,19 @@ def processCircuits(circuits) {
                   sendEvent(name: "poolthermostatOperatingState", value: "idle")
                   state.POOLstate = 0
               }      
-           }         
+           }       
          }
+         
     }
     state.DEBUG = 0
+    setAllPumps()
+    setAllLights()
 }
  
 def processTime(time) {
-    if (state.DBG == "TIME") state.DEBUG = 1
     log.info "processing time"
+    if (state.DBG == "TIME") state.DEBUG = 1
+
     loginfo "time = ${time}"
 
     def controllerTime = time.controllerTime
@@ -802,8 +808,9 @@ def processTime(time) {
 }
 
 def processPumps(pumps) {
-    if (state.DBG == "PUMPS") state.DEBUG = 1
     loginfo "processing pump"
+    if (state.DBG == "PUMPS") state.DEBUG = 1
+
     loginfo "pumps = ${pumps}"
     pumps.keySet().each {      
        def pump = pumps[it]
@@ -812,17 +819,23 @@ def processPumps(pumps) {
        logwarn "friendlyName = " + pump.friendlyName
        sendEvent(name: "Pump ${it}", value: "${pump.friendlyName}\n---Pump---\nWatts :${pump.watts} \nRPM :${pump.rpm} \nError :${pump.err}\nState :${pump.drivestate}\nMode :${pump.run}")
     }
+    setAllPumps()
     state.DEBUG = 0
 }
 
 def processConfig(config) {
     log.info "processing config"
+    if (state.DBG == "CONFIG") state.DEBUG = 1
+    logdebug "config = ${config}"
+    
     sendEvent(name: "config", value: config.systemReady?.is(1) ? "on" : "off", descriptionText: "System Status is ${config.systemReady?.is(1) ? 'on' : 'off'}")
+    state.DEBUG = 0
 }
 
 def processSchedule(schedule) { 
-    if (state.DBG == "SCHEDULE") state.DEBUG = 1
     log.info "processing schedule"
+    if (state.DBG == "SCHEDULE") state.DEBUG = 1
+
     logdebug "schedule = ${schedule}"
     def fullSchedule = "----- SCHEDULE -----\n"
     //fullSchedule = fullSchedule + "#      Circuit     StartTime     EndTime\n"  
@@ -932,6 +945,7 @@ def processSchedule(schedule) {
 // sendCommand : sends commands to controller
 
 def sendCommandCallBack(command, callBack) {
+    log.warn "In sendCommandCallBack"
     def userpass = encodeCredentials(username, password)
     def headers = getHeader(userpass)
     def dni = setDeviceNetworkId("${controllerIP}","${controllerPort}")
@@ -940,7 +954,7 @@ def sendCommandCallBack(command, callBack) {
         method: "GET",
 		path: command,
         headers: headers,
-        dni: [dni]
+        dni: [dni]       
     ]    
     
     def opts = [
@@ -948,10 +962,10 @@ def sendCommandCallBack(command, callBack) {
         type: 'LAN_TYPE_CLIENT'
     ]
     
-    //log.info "sendCommand command: ${command}\npoolCommand =\n${params}"
+    logwarn "sendCommand command: ${command}\npoolCommand =\n${params}"
     try {
        sendHubCommand(new physicalgraph.device.HubAction(params, null, opts))
-       //log.debug "SENT: $params"
+       logwarn "SENT: $params $opts callback : ${callBack}"
     } catch (e) {
        log.error "something went wrong: $e"
     }
@@ -969,10 +983,10 @@ def sendCommand(command) {
         dni: [dni]
     ]    
     
-    //log.info "sendCommand command: ${command}\npoolCommand =\n${params}"
+    loginfo "sendCommand command: ${command}\npoolCommand =\n${params}"
     try {
        sendHubCommand(new physicalgraph.device.HubAction(params))
-       //log.debug "SENT: $params"
+       logdebug "SENT: $params"
     } catch (e) {
        log.error "something went wrong: $e"
     }
@@ -982,26 +996,23 @@ def sendCommand(command) {
 // log routines
 
 def loginfo(msg) {
-    //if (state.debug) log.info msg
     if (state.DEBUG) log.info msg    
 }
 
 def logdebug(msg) {
-    //if (state.debug) log.debug msg
     if (state.DEBUG) log.debug msg
 }
 
 def logwarn(msg) {
-    //if (state.debug) log.warn msg
     if (state.DEBUG) log.warn msg
 }
 
 def logerror(msg) {
-    //if (state.debug) log.error msg
     if (state.DEBUG) log.error msg
 }
 
 // Init routines
+
 def buildCircuit() {
    sendCommandCallBack("/device",'parseDevice')
    state.circuit = [:]
@@ -1047,12 +1058,13 @@ def initialize() {
     state.controllerDay = controllerDay
     state.controllerMonth = controllerMonth
     state.controllerDoW = controllerDoW
-    state.version = "${name} Version\n${verMajor}.${verMinor}.${verPatch}\n Debug is ${state.debug}"
+    state.version = "${name} Version\n${verMajor}.${verMinor}.${verPatch}\n Debug ${state.debug}"
 
     buildCircuit()
 }
 
 def refresh() {
+    // this runs every minute
     logwarn "Requested a refresh"
     sendEvent(name: "config", value:"unknown", descriptionText: "System Status is unknown");
     sendCommand("/all")   
@@ -1060,21 +1072,13 @@ def refresh() {
     updateSchedule()
 }
 
-def poll() {
-	// poll gets /all & /device status messages from pool controller (raspberry Pi)
-    // this runs every minute
-    //sendHubCommand(setFeature("/all"))
-    //sendHubCommand(setFeature("/device"))
-}
-
 def set_debug() {
-    //def verStr = device.currentState("poolCntr").value
     def verStr = state.version
-    log.error "verStr = ${verStr}"
+    logerror "verStr = ${verStr}"
     def curr = state.debug
     state.debug = !state.debug 
     def newVerStr = verStr.replaceAll("is ${curr?.is(true) ? "on" : "off"}","is ${state.debug?.is(true) ? "on" : "off"}")
-    log.error "newVerStr = ${newVerStr}"
+    logerror "newVerStr = ${newVerStr}"
     state.version = newVerStr
     
     def dbug = state.debug?.is(true) ? "on" : "off"
@@ -1086,8 +1090,8 @@ def set_debug() {
 def updated() {
     log.info "######### UPDATED #########" 
     state.DBG = DBG
-    log.info "DBG = ${DBG}"
-    log.info "state.DBG = ${state.DBG}"
+    loginfo "DBG = ${DBG}"
+    loginfo "state.DBG = ${state.DBG}"
     if (DBG == "ALL") state.DEBUG = 1
     initialize()   
     sendEvent(name:"poolCntr", value: state.version, isStateChange: "true")
@@ -1101,11 +1105,6 @@ def installed() {
 }
 
 // Schedule/Egg timer routines
-
-// API calls in server.js file on https://github.com/tagyoureit/nodejs-poolController/blob/b3d31a94daf486058d9a8d8043d9039d3a459487/src/lib/comms/server.js
-// curl -X GET http://user:pass@pi-pool:3000/schedule | jq '.schedule | ."7"'
-// curl -X GET http://user:pass@pi-pool:3000/schedule/set/7/3/21/00/22/00/127
-// curl -X GET http://user:pass@pi-pool:3000/schedule/set/id/7/circuit/3
 
 def get_hour(time) {
    return time.format('HH')
@@ -1162,7 +1161,6 @@ def updateSchedule() {
         sendEvent(name: "eggTimerSchedule", value: "Schedule\nID:${sch_id? sch_id : "Not Set"} Name:${sch_circuit? sch_circuit : "Not Set"}\n${times}\n\n${dow}", isStateChange: "true")
     }
     else 
-        //sendEvent(name: "eggTimerSchedule", value: "Schedule or Egg Timer not set\nID:${sch_id? sch_id : ""} Name:${sch_circuit? sch_circuit : ""}")
         sendEvent(name: "eggTimerSchedule", value: "Schedule or Egg Timer not set")
 
 
@@ -1254,7 +1252,7 @@ def poolalterSetpoint(targetValue) {
     setPoolHeatPoint(targetValue)  
 }
 
-def setPoolHeatPoint(value) {
+def setPoolHeatPoint(value) {   
     sendCommandCallBack("/poolheat/setpoint/${value}",'parseAction')
 }
 
@@ -1302,13 +1300,13 @@ def pooltempDown() {
 }
 
 def poolSetRangedLevel(value) {
-	log.debug "setting ranged level to $value"
+	logdebug "setting POOL ranged level to $value"
     poolalterSetpoint(value)
 	sendEvent(name:"poolTemp4", value:value)
 } 
 
 def spaSetRangedLevel(value) {
-	log.debug "setting ranged level to $value"
+	log.debug "setting SPA ranged level to $value"
     spaalterSetpoint(value)
 	sendEvent(name:"spaTemp4", value:value)
 } 
@@ -1370,19 +1368,30 @@ def displayCntr() {
     }   
 }
 
-def adjustAll(feature, Allfeature, status, otherFeature) {
-    log.debug "--------- adjustAll -----------"
-    sendEvent(name: Allfeature, value: "off")
-    def current = device.currentState(otherFeature)?.value                 
-    log.info "current = ${current}"
-    if (status == "on" && current == "on")
-         sendEvent(name: Allfeature, value: "on")
-    /*     
-    else if (status == "off") // || slcurrent == "off") 
-         sendEvent(name: Allfeature, value: "off")
-    */     
-}
+// Set ALL Pumps/All Lights
 
+def setAllPumps() {
+    def highspeed = device.currentState("HIGH SPEED")?.value
+    def cleaner = device.currentState("CLEANER")?.value
+    logerror "highspeed = ${highspeed}"
+    logerror "cleaner = ${cleaner}"
+    if (highspeed == "on" && cleaner == "on")
+       sendEvent(name: "ALL PUMPS", value: "on")
+    else    
+       sendEvent(name: "ALL PUMPS", value: "off")
+}  
+
+def setAllLights() {
+    def poolLight = device.currentState("POOL LIGHT")?.value
+    def spaLight = device.currentState("SPA LIGHT")?.value
+    logerror "poolLight = ${poolLight}"
+    logerror "spaLight = ${spaLight}"
+    if (poolLight == "on" && spaLight == "on")
+       sendEvent(name: "ALL LIGHTS", value: "on")
+    else    
+       sendEvent(name: "ALL LIGHTS", value: "off")
+}
+    
 // Toggle routines
 
 def spaModeToggle() {
@@ -1472,13 +1481,29 @@ def cleanerToggle() {
 }
 
 def allPumpsToggle() {
-	logwarn "Executing 'allPumpsToogle'"
-    Toggle('CLEANER')
-    Toggle('HIGH SPEED')
+	log.warn "Executing 'allPumpsToogle'"
+    def allpumpstate = device.currentValue("ALL PUMPS")
+
+    def value 
+    log.debug "allpumpstate = ${allpumpstate}"
+    
+    if (allpumpstate == "on")
+        value = 0
+    else
+        value = 1
+    
+    log.debug = "value = ${value}"
+    
+    def highspeednum = state.circuit["HIGH SPEED"]
+    def cleanernum = state.circuit["CLEANER"]    
+    
+    sendCommandCallBack("/circuit/${highspeednum}/set/${value}",'parseAction')
+    sendCommandCallBack("/circuit/${cleanernum}/set/${value}",'parseAction')
 }
 
 def cleanWayToggle() {
-	logwarn "Executing 'cleanWayToogle'"
+	log.warn "Executing 'cleanWayToogle'"
+
     Toggle('CLEANER')
     Toggle('SPILLWAY')
 }
